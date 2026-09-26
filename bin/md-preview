@@ -290,10 +290,17 @@ cmd_serve() {
   ) &
   WATCH_PID=$!
 
+  # Serve our directory first, then the Markdown file's own directory, so
+  # relative links (images) resolve but its index.html can't shadow the
+  # preview. Only a config file can give browser-sync several base
+  # directories; --serveStatic directories are tried before the server's.
+  json_str() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; printf '"%s"' "$s"; }
+  printf 'module.exports = { server: { baseDir: [%s, %s] } };\n' \
+    "$(json_str "$dir")" "$(json_str "$(dirname "$src")")" > "$dir/.bs-config.js"
+
   local -a bs_args=(
     start
-    --server "$dir"
-    --serveStatic "$(dirname "$src")"
+    --config "$dir/.bs-config.js"
     --files "$dir/index.html"
     --watchEvents change add
     --listen "$listen"

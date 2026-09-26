@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- `serve` showed the folder's own `index.html` instead of the preview when
+  the Markdown file sat next to one: browser-sync tries `--serveStatic`
+  directories before its server root. The preview and the Markdown file's
+  folder are now two base directories, the preview first.
+
 - A link to a section (`page.html#heading`) landed in the wrong place on
   pages with diagrams: mermaid drew them after the browser had scrolled,
   pushing the heading out of view. md-preview now scrolls to the fragment

@@ -195,10 +195,13 @@ The script finds its share directory by following its own symlink
      Emacs lock files. The loop restarts entr, and first re-renders if the
      source is newer than `.stamp`, so saves made during the restart
      aren't lost.
-3. Start browser-sync with `--server <serve dir>` and
-   `--serveStatic <directory of FILE.md>`, so relative links such as images
-   resolve against the Markdown file's directory. It watches `index.html`
-   for `change` and `add` events.
+3. Start browser-sync with two base directories, in order: the serve
+   directory, then the directory of FILE.md, so relative links such as
+   images resolve against the Markdown file's directory. The order means an
+   `index.html` next to FILE.md can't shadow the preview at `/`. (Only a
+   config file, `.bs-config.js` in the serve directory, can give
+   browser-sync several base directories.) It watches `index.html` for
+   `change` and `add` events.
 4. Each render writes to a temporary file and moves it into place, so the
    browser never sees a half-written page. If pandoc fails, `index.html`
    becomes an error page showing pandoc's stderr, and pandoc's messages

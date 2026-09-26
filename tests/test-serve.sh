@@ -11,6 +11,8 @@ W=$WORK/serve
 rm -rf "$W"; mkdir -p "$W/doc/test-assets" "$W/run"
 cp "$ROOT/test-sample.md" "$W/doc/doc.md"
 cp "$ROOT/test-assets/badge.svg" "$W/doc/test-assets/"
+# A folder with its own index.html must not shadow the preview.
+printf '<html><body>FOLDER-INDEX</body></html>\n' > "$W/doc/index.html"
 DOC=$W/doc/doc.md
 
 PID='' PORT='' LOG='' RUNS=0
@@ -54,6 +56,7 @@ if ! start; then
 fi
 ok "server starts on port $PORT"
 check "renders the document"     has 'mdp-frontmatter'
+refute "not the folder's index.html" has 'FOLDER-INDEX'
 eq "stylesheet served"           200 "$(status _md-preview/share/style.css)"
 eq "md-preview.js served"        200 "$(status _md-preview/share/md-preview.js)"
 eq "image next to the .md"       200 "$(status test-assets/badge.svg)"
