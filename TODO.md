@@ -31,111 +31,41 @@
 11. Publish to AUR for installation, with `md-preview
     docs` for a local preview over PORT=6996
 
-## Plan/ Features
+## Priorities
 
-Items 1, 2, 5, 7 and part of 6 are done; see `# DONE`
-below.
+Work in this order. Item numbers match the Intent list
+(13 is new). Items 1, 2, 5, 7 and part of 6 are done;
+see `# DONE` below.
 
-### 3. Svelte
+| # | Item | Release | Why here |
+|---|------|---------|----------|
+| 13 | Release checks | 0.1.0 | Small; makes every later release safe to tag |
+| 10 | `INSTALL.md` | 0.1.0 | Smallest; AUR and MELPA docs point to it |
+| 11 | `md-preview docs`, system vendor dir, AUR | 0.1.0 | Main install channel; needs 10 |
+| 12 | Man page, completions | 0.1.0 | Shipped inside the AUR package |
+| 9 | MELPA | 0.1.0 | Last: MELPA Stable needs the tag, and review takes time |
+| 8 | `md-preview.mk` | 0.2.0 | Enables folder mode |
+| 4 | Folder tree and folder mode | 0.2.0 | Biggest feature; builds on 8 |
+| 6 | Remaining build-time extras | 0.2.x | "Previous/next" needs folder mode |
+| 3 | Svelte | later | Only if the tree needs search |
 
-**Not now.**
+## P1: 0.1.0, installable by others
 
-The widgets you describe (collapsible tree, collapsible
-TOC, highlighting the current section while scrolling,
-remembering hide/show) come to about 100–150 lines of
-plain JS plus `<details>`. Their data (headings, file
-list) is already known at build time, so there's almost
-no state for Svelte to manage.
+### 13. Release checks (from the v0.0.3 release)
 
-- **What Svelte would add:** a compile step, a
-  toolchain to keep updated, and a split between
-  "pandoc renders the page" and "components render
-  parts of it", for very little gain.
-- **When I'd reconsider:** if the tree grows search,
-  filtering or keyboard navigation. Even then, I'd
-  commit the compiled JS bundle so users never need the
-  Svelte toolchain.
-- **Better model for now:** build the HTML at build
-  time and add a small plain-JS enhancement script.
+`v0.0.3` was tagged before CI went green. The release
+itself was fine, but it shouldn't depend on timing.
 
-### 4. Folder tree
-
-**Worth it, and folder mode is the
-bigger feature.**
-
-There are really two features here:
-
-- **The tree fragment:** easy. Generate a nested `<ul>`
-  from `find` once per build and include it in each
-  page, behind a hide/show toggle.
-- **Folder mode**, `md-preview serve DIR`: this is an
-  architecture change. It means rendering many files,
-  rewriting `.md` links to `.html` (today that's
-  `site/links.lua`, which would move into the core),
-  and re-rendering everything when a file is added or
-  removed, because the tree changes.
-  - entr's `-d` behaviour fits well here, since it
-    already exits when files are added.
-  - The pain point is pandoc taking about 1.6 s to
-    start, multiplied by N files. That's where parallel
-    builds and the static pandoc build matter.
-- **The real payoff:** `site/` becomes just a
-  folder-mode build plus a page-name mapping, instead
-  of a special case.
-
-### 6. “Formulate once, fill in at every build”
-
-**Agreed.** Anchors, copy buttons and build info are
-done; these remain:
-
-- "last modified" from `git log`
-- "edit on GitHub" links
-- previous/next page links in folder mode
-
-### 8. Replace the script with a Makefile
-
-**Partly.**
-
-Make is the right tool for multi-file builds: it knows
-what depends on what, rebuilds only what changed, and
-`-j` runs pandoc in parallel. It's the wrong tool for
-the interactive side: supervising processes, handling
-signals and cleanup, finding nvm, parsing options, and
-the error page.
-
-My suggestion is a hybrid:
-
-- Keep `md-preview` as the bash front end.
-- Ship `share/md-preview/md-preview.mk` with the
-  generic rules (`%.html` from `%.md`, the tree
-  fragment, assets).
-- The script runs it with `make -f … -j` for folder and
-  site builds.
-- `site/Makefile` just `include`s it.
-- Single-file `serve` stays in bash.
-
-### 9. MELPA: `md-preview.el`
-
-The name is free on MELPA (no recipe named
-`md-preview`, checked 2026-09-26).
-
-- **Make the package MELPA-ready:** full header
-  (Author, Maintainer, URL, Keywords, Version,
-  Package-Requires, `SPDX-License-Identifier: MIT`), and
-  clean `package-lint` and `checkdoc` runs, both added
-  to the `emacs` test suite.
-- **Recipe**, submitted as a PR to `melpa/melpa`:
-  `(md-preview :fetcher github :repo
-  "bvraghav/md-preview" :files ("emacs/md-preview.el"))`
-- **MELPA installs only the Elisp**, not the
-  `md-preview` command. So `md-preview-start` should
-  check `executable-find` and say how to install the
-  command, rather than fail with a process error.
-- **`emacs/INSTALL.md`:** `package-install` and
-  `use-package :ensure`, straight/elpaca, a manual
-  `load-path`; that the command is a separate install
-  (AUR, or from source); and PATH/nvm notes for GUI
-  Emacs.
+- **A `release` job in CI on tag pushes** that fails
+  unless `VERSION`, the `;; Version:` header, the
+  CHANGELOG heading and the tag all agree, and the
+  tagged commit's test run passed.
+- **Test that the CHANGELOG has a section for
+  `VERSION`** (in the `build` suite), alongside the
+  existing check on the Elisp header.
+- **Release checklist** in `CONTRIBUTING.md` or the
+  README: update CHANGELOG, bump `VERSION` and the
+  header, push, wait for green, then tag.
 
 ### 10. `INSTALL.md`: installation from source
 
@@ -182,6 +112,113 @@ The name is free on AUR (checked 2026-09-26).
 - **Shell completions** for bash and zsh:
   subcommands, options, `*.md` files.
 
+### 9. MELPA: `md-preview.el`
+
+The name is free on MELPA (no recipe named
+`md-preview`, checked 2026-09-26).
+
+- **Make the package MELPA-ready:** full header
+  (Author, Maintainer, URL, Keywords, Version,
+  Package-Requires, `SPDX-License-Identifier: MIT`), and
+  clean `package-lint` and `checkdoc` runs, both added
+  to the `emacs` test suite.
+- **Recipe**, submitted as a PR to `melpa/melpa`:
+  `(md-preview :fetcher github :repo
+  "bvraghav/md-preview" :files ("emacs/md-preview.el"))`
+- **MELPA installs only the Elisp**, not the
+  `md-preview` command. So `md-preview-start` should
+  check `executable-find` and say how to install the
+  command, rather than fail with a process error.
+- **`emacs/INSTALL.md`:** `package-install` and
+  `use-package :ensure`, straight/elpaca, a manual
+  `load-path`; that the command is a separate install
+  (AUR, or from source); and PATH/nvm notes for GUI
+  Emacs.
+
+## P2: 0.2.0, folder mode
+
+### 8. Replace the script with a Makefile
+
+**Partly.**
+
+Make is the right tool for multi-file builds: it knows
+what depends on what, rebuilds only what changed, and
+`-j` runs pandoc in parallel. It's the wrong tool for
+the interactive side: supervising processes, handling
+signals and cleanup, finding nvm, parsing options, and
+the error page.
+
+My suggestion is a hybrid:
+
+- Keep `md-preview` as the bash front end.
+- Ship `share/md-preview/md-preview.mk` with the
+  generic rules (`%.html` from `%.md`, the tree
+  fragment, assets).
+- The script runs it with `make -f … -j` for folder and
+  site builds.
+- `site/Makefile` just `include`s it.
+- Single-file `serve` stays in bash.
+
+### 4. Folder tree
+
+**Worth it, and folder mode is the
+bigger feature.**
+
+There are really two features here:
+
+- **The tree fragment:** easy. Generate a nested `<ul>`
+  from `find` once per build and include it in each
+  page, behind a hide/show toggle.
+- **Folder mode**, `md-preview serve DIR`: this is an
+  architecture change. It means rendering many files,
+  rewriting `.md` links to `.html` (today that's
+  `site/links.lua`, which would move into the core),
+  and re-rendering everything when a file is added or
+  removed, because the tree changes.
+  - entr's `-d` behaviour fits well here, since it
+    already exits when files are added.
+  - The pain point is pandoc taking about 1.6 s to
+    start, multiplied by N files. That's where parallel
+    builds and the static pandoc build matter.
+- **The real payoff:** `site/` becomes just a
+  folder-mode build plus a page-name mapping, instead
+  of a special case.
+
+## P3: 0.2.x
+
+### 6. “Formulate once, fill in at every build”
+
+**Agreed.** Anchors, copy buttons and build info are
+done; these remain:
+
+- "last modified" from `git log`
+- "edit on GitHub" links
+- previous/next page links in folder mode
+
+## P4: later, only if needed
+
+### 3. Svelte
+
+**Not now.**
+
+The widgets you describe (collapsible tree, collapsible
+TOC, highlighting the current section while scrolling,
+remembering hide/show) come to about 100–150 lines of
+plain JS plus `<details>`. Their data (headings, file
+list) is already known at build time, so there's almost
+no state for Svelte to manage.
+
+- **What Svelte would add:** a compile step, a
+  toolchain to keep updated, and a split between
+  "pandoc renders the page" and "components render
+  parts of it", for very little gain.
+- **When I'd reconsider:** if the tree grows search,
+  filtering or keyboard navigation. Even then, I'd
+  commit the compiled JS bundle so users never need the
+  Svelte toolchain.
+- **Better model for now:** build the HTML at build
+  time and add a small plain-JS enhancement script.
+
 ## Versioning
 
 Semantic Versioning, staying at 0.x until the interface
@@ -208,13 +245,10 @@ settles.
 
 Planned releases:
 
-- **0.0.3:** done, not yet released (see `# DONE`).
-- **0.1.0: installable by others.** Items 9–12:
-  `INSTALL.md`, `emacs/INSTALL.md`, a MELPA-ready
-  `md-preview.el` and recipe, `md-preview docs`, the
-  system vendor directory, the AUR package, man page and
-  completions. MINOR, because `docs` and the install
-  layout are new interface.
+- **0.0.3:** released (see `# DONE`).
+- **0.1.0: installable by others.** Items 13, 10, 11,
+  12, 9 (see Priorities). MINOR, because `docs` and the
+  install layout are new interface.
 - **0.2.0: folder mode.** Items 4 and 8: folder tree,
   `md-preview.mk`, link rewriting in the core, `site/`
   rebuilt on folder mode. (Previously planned as 0.1.0;
