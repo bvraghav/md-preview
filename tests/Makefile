@@ -7,6 +7,7 @@
 #   make serve        live preview end to end                 (entr, browser-sync)
 #   make browser      the site in headless Chromium           (chromium or Chrome)
 #   make emacs        the Emacs package                       (emacs)
+#   make folder       folder mode: build a folder of Markdown (pandoc)
 #   make completions  bash and zsh completion, man page       (zsh, pandoc)
 #   make aur          build the AUR package and run it        (makepkg; Arch only)
 #   make release      version strings and CHANGELOG agree; with
@@ -19,7 +20,7 @@
 # are fetched once into $(MD_PREVIEW_DATA) (default _work/data). Point
 # MD_PREVIEW_DATA at an existing data directory to reuse its downloads.
 
-SUITES := release build completions site serve browser emacs aur
+SUITES := release build folder completions site serve browser emacs aur
 MDP    := ../bin/md-preview
 
 MD_PREVIEW_DATA ?= $(CURDIR)/_work/data
@@ -29,7 +30,7 @@ export MD_PREVIEW_DATA
 
 all: $(SUITES)
 
-ci: release build completions site browser serve
+ci: release build folder completions site browser serve
 
 # Idempotent; only downloads what is missing.
 vendor:
@@ -40,6 +41,9 @@ release:
 
 build: vendor
 	@bash test-build.sh
+
+folder:
+	@bash test-folder.sh
 
 completions:
 	@bash test-completions.sh

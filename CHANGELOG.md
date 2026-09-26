@@ -6,6 +6,26 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Folder mode:** `md-preview build DIR` turns a folder of Markdown into a
+  folder of HTML pages. `a/b.md` becomes `a/b.html`; a folder's `README.md`
+  becomes its `index.html` (unless it has an `index.md`), and a folder with
+  neither gets a generated listing. Relative links to Markdown files and
+  folders are rewritten to the pages they become; images and other files
+  are copied. Every page gets a **file tree** (a sidebar on wide screens, a
+  collapsible box otherwise) with the current page marked; hide it with
+  `md-preview-tree: false`. Builds are incremental and render pages in
+  parallel (`MD_PREVIEW_JOBS`); `--force` renders everything. Hidden
+  folders and `node_modules` are skipped.
+- A page without a `title` now takes its `<title>` from its first
+  level-1 heading, before falling back to the file name.
+
+### Changed
+
+- User pandoc filters (after `--`, or in `MD_PREVIEW_PANDOC_ARGS`) now run
+  before md-preview's own, so they see the document as written.
+
 ## [0.1.0] - 2026-09-26
 
 md-preview is now installable by others: an AUR package, a MELPA-ready

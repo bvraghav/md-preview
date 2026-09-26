@@ -223,49 +223,73 @@ pre.mermaid {
 /* hide the source until mermaid has replaced it */
 pre.mermaid:not([data-processed]) { color: transparent; min-height: 3rem; }
 
-/* ---------------------------------------------------- table of contents */
+/* ------------------------------------------ table of contents, file tree */
 
-/* Inline, collapsible block below the title on narrow screens; a fixed
-   sidebar to the right of the content on wide ones. */
-.mdp-toc { margin: 0 0 2rem; font-size: 0.9rem; }
-.mdp-toc > details {
+/* Inline, collapsible blocks above the content on narrow screens; fixed
+   sidebars on wide ones: the file tree (folder mode) on the left, the table
+   of contents on the right. */
+:is(.mdp-toc, .mdp-tree) { margin: 0 0 1rem; font-size: 0.9rem; }
+.mdp-toc { margin-bottom: 2rem; }
+:is(.mdp-toc, .mdp-tree) > details {
   margin: 0;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--subtle);
 }
-.mdp-toc summary {
+:is(.mdp-toc, .mdp-tree) > details > summary {
   cursor: pointer;
   padding: 0.4rem 0.75rem;
   color: var(--muted);
   font: 0.85rem var(--mono);
 }
-.mdp-toc summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 3px; }
-.mdp-toc-body { padding: 0 0.5rem 0.5rem; }
-.mdp-toc ul { list-style: none; margin: 0; padding-left: 0.85rem; }
+:is(.mdp-toc, .mdp-tree) summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 3px; }
+:is(.mdp-toc-body, .mdp-tree-body) { padding: 0 0.5rem 0.5rem; }
+:is(.mdp-toc, .mdp-tree) ul { list-style: none; margin: 0; padding-left: 0.85rem; }
 .mdp-toc-body > ul { padding-left: 0; }
-.mdp-toc li, .mdp-toc li + li { margin: 0; }
-.mdp-toc a {
+:is(.mdp-toc, .mdp-tree) li, :is(.mdp-toc, .mdp-tree) li + li { margin: 0; }
+:is(.mdp-toc, .mdp-tree) a {
   display: block;
   padding: 0.15rem 0.5rem;
   border-left: 2px solid transparent;
   color: var(--muted);
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
-.mdp-toc a:hover { color: var(--link); text-decoration: none; }
-.mdp-toc a.mdp-active { color: var(--fg); border-left-color: var(--link); }
+:is(.mdp-toc, .mdp-tree) a:hover { color: var(--link); text-decoration: none; }
+.mdp-toc a.mdp-active,
+.mdp-tree a[aria-current="page"] { color: var(--fg); border-left-color: var(--link); }
+
+/* folders: a disclosure triangle, then the folder's own link */
+.mdp-tree-root { font-family: var(--mono); }
+.mdp-tree-body > ul { padding-left: 0.25rem; }
+.mdp-tree-dir > details > summary {
+  display: flex; align-items: baseline;
+  cursor: pointer; list-style: none;
+}
+.mdp-tree-dir > details > summary::-webkit-details-marker { display: none; }
+.mdp-tree-dir > details > summary::before {
+  content: "▸"; width: 0.85rem; flex: none;
+  color: var(--muted); font-size: 0.75rem;
+}
+.mdp-tree-dir > details[open] > summary::before { content: "▾"; }
+.mdp-tree-dir > details > summary > a { flex: 1; padding-left: 0.1rem; }
+.mdp-tree-dir > details > ul { padding-left: 0.85rem; }
+.mdp-tree-dir > details { margin: 0; }
+/* line page names up with folder names, after the triangle */
+.mdp-tree li:not(.mdp-tree-dir) > a { padding-left: 1.45rem; }
 
 @media (min-width: 1400px) {
-  .mdp-toc {
+  :is(.mdp-toc, .mdp-tree) {
     position: fixed; z-index: 5;
     top: 3.5rem;
-    left: calc(50% + 450px + 1.5rem);
     width: min(18rem, calc(50% - 450px - 3rem));
     margin: 0;
   }
-  .mdp-toc > details { border: 0; background: transparent; }
-  .mdp-toc summary { padding-left: 0.5rem; }
-  .mdp-toc-body { max-height: calc(100vh - 7rem); overflow-y: auto; overscroll-behavior: contain; }
+  .mdp-toc  { left: calc(50% + 450px + 1.5rem); }
+  .mdp-tree { right: calc(50% + 450px + 1.5rem); }
+  :is(.mdp-toc, .mdp-tree) > details { border: 0; background: transparent; }
+  :is(.mdp-toc, .mdp-tree) > details > summary { padding-left: 0.5rem; }
+  :is(.mdp-toc-body, .mdp-tree-body) { max-height: calc(100vh - 7rem); overflow-y: auto; overscroll-behavior: contain; }
 }
 
 /* ------------------------------------------------------ heading anchors */
@@ -321,7 +345,7 @@ div.csl-right-inline { margin-left: 2em; padding-left: 1em; }
 /* ------------------------------------------------------------- print */
 
 @media print {
-  .mdp-bar, .mdp-toc, .mdp-copy, .mdp-anchor { display: none; }
+  .mdp-bar, .mdp-toc, .mdp-tree, .mdp-copy, .mdp-anchor { display: none; }
   .markdown-body { max-width: none; padding: 0; }
 }
 

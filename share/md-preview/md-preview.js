@@ -90,25 +90,45 @@
     wrap.appendChild(btn);
   });
 
-  // ----------------------------------------------------- table of contents
+  // --------------------------------------------- sidebars: TOC, file tree
+
+  var wide = window.matchMedia('(min-width: 1400px)');
+
+  // Remember whether a sidebar is open, separately for the sidebar (wide)
+  // and inline (narrow) layouts. With no preference: open as a sidebar,
+  // closed inline so it doesn't push the content down.
+  function sidebar(nav, name) {
+    var box = nav.querySelector('details');
+    function key() { return 'md-preview-' + name + '-open:' + (wide.matches ? 'wide' : 'narrow'); }
+    function restore() {
+      var saved = load(key());
+      box.open = saved === null ? wide.matches : saved === '1';
+    }
+    restore();
+    if (wide.addEventListener) wide.addEventListener('change', restore);
+    box.addEventListener('toggle', function () { save(key(), box.open ? '1' : '0'); });
+    return box;
+  }
+
+  // Keep LINK visible when BODY scrolls on its own.
+  function reveal(body, link) {
+    if (body.scrollHeight <= body.clientHeight) return;
+    var lr = link.getBoundingClientRect(), br = body.getBoundingClientRect();
+    if (lr.top < br.top) body.scrollTop -= br.top - lr.top + 16;
+    else if (lr.bottom > br.bottom) body.scrollTop += lr.bottom - br.bottom + 16;
+  }
+
+  var tree = document.querySelector('.mdp-tree');
+  if (tree) {
+    var treeBox = sidebar(tree, 'tree');
+    var here = tree.querySelector('[aria-current="page"]');
+    if (here && treeBox.open) reveal(tree.querySelector('.mdp-tree-body'), here);
+  }
 
   var toc = document.querySelector('.mdp-toc');
   if (!toc) return;
-  var box = toc.querySelector('details');
+  var box = sidebar(toc, 'toc');
   var body = toc.querySelector('.mdp-toc-body');
-  var wide = window.matchMedia('(min-width: 1400px)');
-
-  // Separate preference for the sidebar (wide) and inline (narrow) layouts.
-  // With no preference: open as a sidebar, closed inline so it doesn't push
-  // the content down.
-  function key() { return 'md-preview-toc-open:' + (wide.matches ? 'wide' : 'narrow'); }
-  function restore() {
-    var saved = load(key());
-    box.open = saved === null ? wide.matches : saved === '1';
-  }
-  restore();
-  if (wide.addEventListener) wide.addEventListener('change', restore);
-  box.addEventListener('toggle', function () { save(key(), box.open ? '1' : '0'); });
 
   // Highlight the section being read: the last heading above the fold.
   var links = {};
@@ -133,11 +153,7 @@
     link.classList.add('mdp-active');
     active = link;
     // Keep it visible when the sidebar list scrolls on its own.
-    if (box.open && body.scrollHeight > body.clientHeight) {
-      var lr = link.getBoundingClientRect(), br = body.getBoundingClientRect();
-      if (lr.top < br.top) body.scrollTop -= br.top - lr.top + 16;
-      else if (lr.bottom > br.bottom) body.scrollTop += lr.bottom - br.bottom + 16;
-    }
+    if (box.open) reveal(body, link);
   }
   var queued = false;
   addEventListener('scroll', function () {
