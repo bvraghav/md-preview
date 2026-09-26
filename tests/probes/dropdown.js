@@ -22,11 +22,32 @@ window.addEventListener('load', function () {
   more.dispatchEvent(new FocusEvent('focusout', { relatedTarget: links[1], bubbles: true }));
   r.focus_within_stays = more.open;
   more.open = false;
+
+  // Whether the flip is needed depends on where "More" lands, which depends
+  // on fonts and wrapping. So check that it flips exactly when the
+  // right-aligned menu would overflow the left edge, and then force a case
+  // that needs it by moving "More" to the start of the nav.
+  function inViewport() {
+    var b = menu.getBoundingClientRect();
+    return b.left >= 0 && b.right <= document.documentElement.clientWidth;
+  }
+  function needsFlip() {
+    return more.getBoundingClientRect().right - menu.offsetWidth < 8;
+  }
+  var needed = needsFlip();
   sum.click();
   setTimeout(function () {  // the flip happens on the async 'toggle' event
-    var b = menu.getBoundingClientRect();
-    r.menu_in_viewport = b.left >= 0 && b.right <= document.documentElement.clientWidth;
-    r.flipped = menu.classList.contains('site-menu-left');
-    report(r);
+    r.menu_in_viewport = inViewport();
+    r.flip_correct = menu.classList.contains('site-menu-left') === needed;
+    more.open = false;
+    more.style.order = '-1';
+    setTimeout(function () {
+      sum.click();
+      setTimeout(function () {
+        r.forced_flipped = menu.classList.contains('site-menu-left');
+        r.forced_in_viewport = inViewport();
+        report(r);
+      }, 150);
+    }, 50);
   }, 150);
 });

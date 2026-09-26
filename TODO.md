@@ -334,7 +334,7 @@ new features.
 ### Also in 0.0.3
 
 - `tests/`: five regression suites (`build`, `site`,
-  `serve`, `browser`, `emacs`), 182 checks; see
+  `serve`, `browser`, `emacs`), 187 checks; see
   `tests/README.md`.
 - Fixed: `serve` could drop a save made while a render
   was running (now `entr -a`); hidden line numbers;

@@ -10,14 +10,15 @@ make -C tests ci            # build site browser serve: what CI runs
 make -C tests clean         # remove _work/
 ```
 
-At 0.0.3 all five pass: **182 checks in about 4 minutes**.
+At 0.0.3 all five pass: **187 checks in about 4 minutes** (186 on CI, where
+the nvm-fallback check doesn't apply).
 
 | Suite | Checks | Covers | Needs |
 |---|---|---|---|
 | `build` | 58 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
 | `site` | 55 | the website: page set, link rewriting, frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
 | `serve` | 27 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
-| `browser` | 35 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
+| `browser` | 40 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
 | `emacs` | 7 | the Emacs package byte-compiles cleanly; `md-preview-mode` starts, reports its URL and stops cleanly | emacs |
 
 A suite whose tools are missing is **skipped, not failed**. GitHub
@@ -62,6 +63,13 @@ there as a quick smoke test.
     documents that markup; checks now match the element (`<details class=…`)
   - an error-page check looked for "pandoc failed", which `test-sample.md`
     itself contains; it now matches the page's `<h1>pandoc failed (exit`
+  - two checks assumed things about the machine, and failed on the first
+    CI run: the nvm-fallback check ran where nvm had no browser-sync (CI
+    installs it with `sudo npm -g`), and the dropdown check expected the
+    menu to flip at 500px, which depends on how fonts make the nav wrap.
+    The first now runs only when nvm has browser-sync; the second checks
+    that the menu flips exactly when it would overflow, and forces a case
+    that needs it by moving "More" to the left edge
 
 ## Known issue
 

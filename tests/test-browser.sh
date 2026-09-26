@@ -82,10 +82,13 @@ eq "closes on Escape"                        true "$(val escape_closes)"
 eq "Escape returns focus to More"            true "$(val escape_refocuses)"
 eq "closes when focus leaves"                true "$(val focus_leaving_closes)"
 eq "stays open when focus moves within"      true "$(val focus_within_stays)"
-eq "menu within viewport (1000px)"           true "$(val menu_in_viewport)"
-probe todo.html dropdown 500
-eq "menu within viewport (500px)"            true "$(val menu_in_viewport)"
-eq "menu flips on narrow screens"            true "$(val flipped)"
+for w in 1000 500; do
+  [[ $w == 1000 ]] || probe todo.html dropdown $w
+  eq "${w}px: menu within viewport"            true "$(val menu_in_viewport)"
+  eq "${w}px: flips exactly when needed"       true "$(val flip_correct)"
+  eq "${w}px: near the left edge, it flips"    true "$(val forced_flipped)"
+  eq "${w}px: ...and stays within viewport"    true "$(val forced_in_viewport)"
+done
 
 echo "== demo-source.html"
 probe demo-source.html source 1000
