@@ -30,6 +30,12 @@
     for *Installation from source*
 11. Publish to AUR for installation, with `md-preview
     docs` for a local preview over PORT=6996
+14. Both aur and melpa are automatable processes. CI/CD
+    pipeline: `(version-bump
+    "github.com/bvraghav/md-preview.git")` -> `(progn
+    (update-and-publish
+    "aur.archlinux.org/md-preview.git")
+    (update-and-publish-melpa))`
 
 ## Priorities
 
@@ -39,10 +45,58 @@ Work in this order. Item numbers match the Intent list
 
 | # | Item | Release | Why here |
 |---|------|---------|----------|
+| 14 | Release pipeline (bump → AUR) | 0.1.1 | Every later release uses it |
 | 8 | `md-preview.mk` | 0.2.0 | Enables folder mode |
 | 4 | Folder tree and folder mode | 0.2.0 | Biggest feature; builds on 8 |
 | 6 | Remaining build-time extras | 0.2.x | "Previous/next" needs folder mode |
 | 3 | Svelte | later | Only if the tree needs search |
+
+## P1: 0.1.1, release pipeline
+
+### 14. CI/CD: version bump → AUR (and MELPA)
+
+**AUR: fully automatable. MELPA: nothing to automate.**
+Keep it in this repo; no separate template repos. The
+AUR's git repo is the published copy, and
+`packaging/aur/` is already here, so a third copy would
+only need keeping in sync.
+
+- **MELPA** builds snapshots from `main` and MELPA
+  Stable from `vX.Y.Z` tags by itself, once the recipe
+  is merged (a one-time PR, reviewed by hand). So
+  `update-and-publish-melpa` is a no-op per release;
+  the release checks already make sure the tag and the
+  `;; Version:` header agree.
+- **`version-bump`:** a local `make bump V=X.Y.Z` that
+  rewrites every copy of the version the release checks
+  verify, and renames `[Unreleased]` to a dated section.
+  Then review, commit, push, wait for green, tag: a
+  human decision before anything is published.
+- **`update-and-publish` (AUR):** `aur.yml`, run when a
+  GitHub release is published, only if the tag's tests
+  and release checks passed, in an Arch Linux container:
+  1. set `pkgver`, `pkgrel=1`
+  2. `updpkgsums` against GitHub's tag tarball;
+     regenerate `.SRCINFO`
+  3. `makepkg` as a non-root user (build + check),
+     `namcap`
+  4. push PKGBUILD + .SRCINFO to
+     `aur.archlinux.org/md-preview.git` over SSH
+  5. commit the updated `packaging/aur/` back to `main`
+     (needs a write token, and a guard so that commit
+     doesn't start another release)
+- **Dry run:** a manual trigger that does steps 1–3
+  without pushing, to test the pipeline before a real
+  release, or to run it for a release tagged before it
+  existed (such as v0.1.0).
+- **Needs from the maintainer:** an AUR account; a
+  dedicated SSH key pair, public half in the AUR
+  account, private half as the GitHub secret
+  `AUR_SSH_PRIVATE_KEY`; and the one-time MELPA recipe
+  PR from their GitHub account.
+- **Testing:** the container steps locally only if
+  Docker or Podman is available; otherwise the dry run
+  on GitHub is the first test.
 
 ## P2: 0.2.0, folder mode
 
@@ -158,6 +212,10 @@ Planned releases:
 - **0.1.0: installable by others.** Done (see `# DONE`);
   publishing to the AUR and submitting to MELPA follow
   the release.
+- **0.1.1: release pipeline.** Item 14: `make bump`, and
+  publishing to the AUR from CI when a release is
+  published. PATCH, since it changes packaging, not
+  md-preview's interface.
 - **0.2.0: folder mode.** Items 4 and 8: folder tree,
   `md-preview.mk`, link rewriting in the core, `site/`
   rebuilt on folder mode. (Previously planned as 0.1.0;
