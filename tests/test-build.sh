@@ -110,6 +110,39 @@ check "installed build works"        "$P/bin/md-preview" build -o "$W/inst.html"
 check "make uninstall"               make -s uninstall PREFIX="$P"
 refute "uninstall removed the script" test -e "$P/bin/md-preview"
 
+echo "== packaged KaTeX/mermaid"
+if [[ -d $MD_PREVIEW_DATA/vendor ]]; then
+  pk=$W/pkgshare; rm -rf "$pk"; cp -r share/md-preview "$pk"; cp -rL "$MD_PREVIEW_DATA/vendor" "$pk/vendor"
+  empty=$W/emptydata; mkdir -p "$empty"
+  out=$(MD_PREVIEW_DATA=$empty MD_PREVIEW_SHARE=$pk "$MDP" build -o - test-sample.md 2>/dev/null)
+  check "used when nothing is fetched"       grep -q "src=\"$pk/vendor/katex/katex.min.js\"" <<<"$out"
+  out=$(MD_PREVIEW_SHARE=$pk "$MDP" build -o - test-sample.md 2>/dev/null)
+  check "a fetched copy wins"                grep -q "src=\"$MD_PREVIEW_DATA/vendor/katex/katex.min.js\"" <<<"$out"
+  check "doctor says packaged"               bash -c "MD_PREVIEW_DATA='$empty' MD_PREVIEW_SHARE='$pk' '$MDP' doctor | grep -q '^katex .*(packaged, '"
+  MD_PREVIEW_DATA=$empty MD_PREVIEW_SHARE=$pk "$MDP" fetch >/dev/null 2>&1 || true
+  check "fetch writes to the data dir, not the packaged one" test -r "$empty/vendor/katex/katex.min.js"
+fi
+
+echo "== staged install (DESTDIR)"
+D=$W/destdir
+check "make install DESTDIR"          make -s install DESTDIR="$D" PREFIX=/usr
+check "  script in /usr/bin"          test -x "$D/usr/bin/md-preview"
+check "  support files"               test -f "$D/usr/share/md-preview/md-preview.js"
+check "  Emacs package"               test -f "$D/usr/share/emacs/site-lisp/md-preview.el"
+if [[ -d $MD_PREVIEW_DATA/vendor ]]; then
+  check "make install-vendor"         make -s install-vendor DESTDIR="$D" PREFIX=/usr VENDOR_SRC="$MD_PREVIEW_DATA/vendor"
+  check "  KaTeX and mermaid copied"  test -f "$D/usr/share/md-preview/vendor/katex/katex.min.js" -a -f "$D/usr/share/md-preview/vendor/mermaid/mermaid.min.js"
+fi
+refute "install-vendor without a source fails" make -s install-vendor DESTDIR="$D" PREFIX=/usr VENDOR_SRC="$W/none"
+check "make uninstall DESTDIR"        make -s uninstall DESTDIR="$D" PREFIX=/usr
+refute "  nothing left in /usr/bin"   test -e "$D/usr/bin/md-preview"
+
+echo "== docs without documentation"
+P=$W/prefix-nodocs; make -s install PREFIX="$P" >/dev/null
+refute "docs fails when none is installed"   env MD_PREVIEW_DOCS= "$P/bin/md-preview" docs --no-open
+check "  and says how to get it"             bash -c "'$P/bin/md-preview' docs --no-open 2>&1 | grep -q 'make install-docs'"
+refute "unknown docs option fails"           "$MDP" docs --bogus
+
 echo "== View Source round trip"
 sh site/source-page.sh test-sample.md > "$W/src.md"
 fence=$(grep -o '`\{1,\}' test-sample.md | awk '{ if (length > m) m = length } END { print m + 1 }')

@@ -13,12 +13,24 @@ All notable changes to this project are documented here. The format follows
   runs it with the tag, along with the full tests on the tagged commit.
   Tags no longer deploy the site.
 - `CONTRIBUTING.md` with the release checklist.
+- `md-preview docs`: serves the documentation website locally at
+  http://localhost:6996 (`--port`, `--browser`, `--no-open`;
+  `MD_PREVIEW_DOCS_PORT`), with browser-sync or, failing that, python's
+  `http.server`. `make install-docs` installs the site for it.
+- KaTeX and mermaid can be installed with md-preview
+  (`<prefix>/share/md-preview/vendor`, via `make install-vendor`), so a
+  package works offline without `md-preview fetch`; a fetched copy still
+  takes precedence. `doctor` says which is in use.
+- `DESTDIR` support in every install target, for packagers.
 - `INSTALL.md`: installation from source in one place; README's Setup is
   now a short quick start pointing to it. Both are on the site, with
   "Install" in the main navigation.
 
 ### Fixed
 
+- The website footer linked to the wrong commit when the site was built
+  from a release tarball inside another git repository (as AUR builds
+  are); it now links to the release tag there.
 - Tests: two checks depended on the machine, and failed CI for the
   `v0.0.3` tag although md-preview itself was fine. The nvm-fallback check
   now runs only when nvm has browser-sync (CI installs it with

@@ -22,10 +22,14 @@ BUILD    := _build
 MDP      := $(ROOT)/bin/md-preview
 ASSETS   := _md-preview
 
-REPO_URL ?= https://github.com/bvraghav/md-preview
-REF      ?= $(shell git -C $(ROOT) rev-parse HEAD 2>/dev/null || echo main)
-SHORT    := $(shell printf %.7s $(REF))
 VERSION  := $(shell cat $(ROOT)/VERSION)
+REPO_URL ?= https://github.com/bvraghav/md-preview
+# The commit the site is built from. Only if $(ROOT) is itself the top of a
+# git checkout: a release tarball unpacked inside another repository (as AUR
+# builds are) must not pick up that repository's commit. Otherwise the tag.
+REF      ?= $(shell cd $(ROOT) && [ "$$(git rev-parse --show-toplevel 2>/dev/null)" = "$$(pwd -P)" ] \
+                && git rev-parse HEAD || echo v$(VERSION))
+SHORT    := $(shell printf %.7s $(REF))
 
 # Everything a page depends on besides its own source.
 DEPS := $(MDP) $(wildcard $(ROOT)/share/md-preview/*) $(ROOT)/VERSION \

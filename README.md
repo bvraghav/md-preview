@@ -82,6 +82,8 @@ md-preview serve notes.md -- --toc      # extra pandoc options after --
 
 md-preview build notes.md               # one-shot: writes notes.html next to notes.md
 md-preview build --embed notes.md -o /tmp/notes.html   # single self-contained file
+
+md-preview docs                         # this documentation, at http://localhost:6996
 ```
 
 Relative image links resolve against the Markdown file's directory.

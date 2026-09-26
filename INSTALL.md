@@ -10,6 +10,8 @@ package names.
 - [4. Check the installation](#4-check-the-installation)
 - [5. Try it](#5-try-it)
 - [6. Emacs](#6-emacs)
+- [7. Documentation offline](#7-documentation-offline)
+- [Packagers](#packagers)
 - [Upgrading](#upgrading)
 - [Uninstalling](#uninstalling)
 
@@ -167,6 +169,36 @@ If `md-preview` itself isn't on Emacs' `exec-path`, set
 `md-preview-program` to its absolute path, or use
 [`exec-path-from-shell`](https://github.com/purcell/exec-path-from-shell).
 
+## 7. Documentation offline
+
+```sh
+make install-docs
+md-preview docs          # http://localhost:6996
+```
+
+`install-docs` builds this website (README, this page, the reference, the
+demo, …) and installs it to `~/.local/share/doc/md-preview/html`. Building
+it needs KaTeX and mermaid, which it fetches if `md-preview fetch` hasn't
+already. From a source checkout, `make -C site` alone is enough:
+`md-preview docs` finds `site/_site` too.
+
+## Packagers
+
+All install targets honour `DESTDIR` and `PREFIX`:
+
+```sh
+make install        DESTDIR="$pkgdir" PREFIX=/usr
+make install-docs   DESTDIR="$pkgdir" PREFIX=/usr   # needs KaTeX + mermaid, see below
+make install-vendor DESTDIR="$pkgdir" PREFIX=/usr VENDOR_SRC=/path/to/vendor
+```
+
+`install-vendor` copies a vendor directory laid out like
+`md-preview fetch` makes it (`katex/` holding KaTeX's `dist/`, and
+`mermaid/mermaid.min.js`) to `/usr/share/md-preview/vendor`, so the package
+works offline without `md-preview fetch`. With the same directory at
+`$MD_PREVIEW_DATA/vendor`, `install-docs` builds without network access.
+The AUR package does exactly this; see `packaging/aur/`.
+
 ## Upgrading
 
 ```sh
@@ -180,7 +212,7 @@ them.
 ## Uninstalling
 
 ```sh
-make uninstall                          # same PREFIX as used for install
+make uninstall                          # same PREFIX as used for install (also removes docs)
 rm -rf ~/.local/share/md-preview        # fetched KaTeX / mermaid
 npm uninstall -g browser-sync           # if nothing else uses it
 ```

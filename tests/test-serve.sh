@@ -103,6 +103,28 @@ check "no entr left behind"           gone "entr .*$DOC"
 check "no browser-sync left behind"   gone "browser-sync start .*$W/run"
 refute "port released"                curl -sf -o /dev/null "http://localhost:$PORT/"
 
+echo "== docs"
+if [[ -f $ROOT/site/_site/index.html ]]; then
+  for srv in browser-sync python; do
+    port=$(free_port)
+    MD_PREVIEW_DOCS=$ROOT/site/_site MD_PREVIEW_DOCS_SERVER=$srv setsid "$MDP" docs --no-open --port "$port" \
+      >"$W/docs-$srv.log" 2>&1 &
+    dpid=$!
+    if wait_for 30 curl -sf -o /dev/null "http://localhost:$port/"; then
+      ok "docs via $srv answers on its port"
+      check "  serves the homepage"   bash -c "curl -s http://localhost:$port/ | grep -q 'class=\"site-nav\"'"
+      eq "  serves the demo"          200 "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$port/demo.html")"
+    else
+      bad "docs via $srv answers on its port"; sed 's/^/     /' "$W/docs-$srv.log"
+    fi
+    kill -TERM "$dpid" 2>/dev/null; wait "$dpid" 2>/dev/null
+    check "  stops on SIGTERM"        bash -c "! curl -sf -o /dev/null http://localhost:$port/"
+  done
+  eq "default docs port"              6996 "$(sed -n 's/.*MD_PREVIEW_DOCS_PORT:-\([0-9]*\).*/\1/p' "$MDP")"
+else
+  note "docs checks skipped: site not built (make -C site)"
+fi
+
 echo "== nvm fallback"
 nvm_sh=''
 for f in "${NVM_DIR:-/nonexistent}/nvm.sh" "${XDG_CONFIG_HOME:-$HOME/.config}/nvm/nvm.sh" "$HOME/.nvm/nvm.sh"; do

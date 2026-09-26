@@ -43,6 +43,12 @@ check "nav on every page"     bash -c "for f in $OUT/*.html; do grep -q 'class=\
 check "footer with version"   grep -q "Rendered by md-preview $(cat VERSION)" "$OUT/index.html"
 check "live-preview bar hidden by site.css" grep -q '\.mdp-bar { display: none; }' "$OUT/_md-preview/site.css"
 
+echo "== install-docs"
+D=$WORK/site-destdir; rm -rf "$D"
+check "make install-docs DESTDIR"        make -s install-docs DESTDIR="$D" PREFIX=/usr
+check "  site installed for docs"        test -f "$D/usr/share/doc/md-preview/html/index.html" -a -f "$D/usr/share/doc/md-preview/html/demo.html"
+check "  with its assets"                test -f "$D/usr/share/doc/md-preview/html/_md-preview/share/md-preview.js"
+
 echo "== View Source round trip"
 check "demo-source.html reproduces test-sample.md" python3 site/roundtrip.py "$OUT/demo-source.html" test-sample.md
 

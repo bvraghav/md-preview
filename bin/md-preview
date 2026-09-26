@@ -14,7 +14,13 @@ ROOT=$(cd "$(dirname "$SELF")/.." && pwd)
 
 SHARE=${MD_PREVIEW_SHARE:-$ROOT/share/md-preview}
 DATA=${MD_PREVIEW_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/md-preview}
-VENDOR=$DATA/vendor
+# KaTeX + mermaid: the copy fetched by `md-preview fetch` wins over one
+# installed with md-preview (e.g. by a distribution package).
+VENDOR_FETCHED=$DATA/vendor
+VENDOR_PACKAGED=$SHARE/vendor
+if [[ -r $VENDOR_FETCHED/katex/katex.min.js ]]; then VENDOR=$VENDOR_FETCHED
+elif [[ -r $VENDOR_PACKAGED/katex/katex.min.js ]]; then VENDOR=$VENDOR_PACKAGED
+else VENDOR=$VENDOR_FETCHED; fi
 
 KATEX_VERSION=${MD_PREVIEW_KATEX_VERSION:-0.18.9}
 MERMAID_VERSION=${MD_PREVIEW_MERMAID_VERSION:-12.0.0}
@@ -50,6 +56,7 @@ Usage:
   $PROG build   [options] FILE.md    render once to HTML
   $PROG fetch   [--force]            download KaTeX + mermaid for offline use
   $PROG assets  DIR                  copy stylesheet + KaTeX + mermaid into DIR
+  $PROG docs    [options]            this documentation, at http://localhost:6996
   $PROG doctor                       check dependencies and assets
   $PROG help | version
 
@@ -63,6 +70,11 @@ build options:
   -o, --output FILE    output file (default: FILE.html next to FILE.md; '-' = stdout)
       --embed          self-contained HTML (inline CSS, JS, fonts)
       --assets PREFIX  link assets relative to PREFIX (for publishing; see 'assets')
+
+docs options:
+  -p, --port N         port (default: 6996, or MD_PREVIEW_DOCS_PORT)
+  -b, --browser NAME   browser to open (default: system default)
+      --no-open        do not open a browser
 
 Any arguments after '--' are passed to pandoc verbatim.
 EOF
@@ -303,34 +315,34 @@ cmd_fetch() {
   have curl || die "curl not found"
   have tar  || die "tar not found"
 
-  mkdir -p "$VENDOR"
+  mkdir -p "$VENDOR_FETCHED"
   local tmp
   tmp=$(mktemp -d)
   # shellcheck disable=SC2064
   trap "rm -rf '$tmp'" EXIT
 
-  if (( force )) || [[ ! -r $VENDOR/katex/katex.min.js ]]; then
+  if (( force )) || [[ ! -r $VENDOR_FETCHED/katex/katex.min.js ]]; then
     log "fetching KaTeX $KATEX_VERSION"
     curl -fsSL "https://registry.npmjs.org/katex/-/katex-$KATEX_VERSION.tgz" |
       tar -xz -C "$tmp" package/dist
-    rm -rf "$VENDOR/katex"
-    mv "$tmp/package/dist" "$VENDOR/katex"
-    printf '%s\n' "$KATEX_VERSION" >"$VENDOR/katex/VERSION"
+    rm -rf "$VENDOR_FETCHED/katex"
+    mv "$tmp/package/dist" "$VENDOR_FETCHED/katex"
+    printf '%s\n' "$KATEX_VERSION" >"$VENDOR_FETCHED/katex/VERSION"
   else
-    log "KaTeX $(cat "$VENDOR/katex/VERSION" 2>/dev/null) already present (use --force to refetch)"
+    log "KaTeX $(cat "$VENDOR_FETCHED/katex/VERSION" 2>/dev/null) already present (use --force to refetch)"
   fi
 
-  if (( force )) || [[ ! -r $VENDOR/mermaid/mermaid.min.js ]]; then
+  if (( force )) || [[ ! -r $VENDOR_FETCHED/mermaid/mermaid.min.js ]]; then
     log "fetching mermaid $MERMAID_VERSION"
     mkdir -p "$tmp/mermaid"
     curl -fsSL -o "$tmp/mermaid/mermaid.min.js" "$MERMAID_CDN"
     printf '%s\n' "$MERMAID_VERSION" >"$tmp/mermaid/VERSION"
-    rm -rf "$VENDOR/mermaid"
-    mv "$tmp/mermaid" "$VENDOR/mermaid"
+    rm -rf "$VENDOR_FETCHED/mermaid"
+    mv "$tmp/mermaid" "$VENDOR_FETCHED/mermaid"
   else
-    log "mermaid $(cat "$VENDOR/mermaid/VERSION" 2>/dev/null) already present (use --force to refetch)"
+    log "mermaid $(cat "$VENDOR_FETCHED/mermaid/VERSION" 2>/dev/null) already present (use --force to refetch)"
   fi
-  log "assets in $VENDOR"
+  log "assets in $VENDOR_FETCHED"
 }
 
 # Copy what `build --assets PREFIX` pages link to into DIR, where DIR is the
@@ -350,6 +362,52 @@ cmd_assets() {
   log "assets in $dir"
 }
 
+vendor_kind() { if [[ $VENDOR == "$VENDOR_PACKAGED" ]]; then echo packaged; else echo fetched; fi; }
+
+# Serve the project website (README, reference, demo, ...) locally. Looks in
+# MD_PREVIEW_DOCS, then where `make install-docs` puts it, then a site built
+# in a source checkout (make -C site).
+cmd_docs() {
+  local port=${MD_PREVIEW_DOCS_PORT:-6996} browser='' open=1
+  local server=${MD_PREVIEW_DOCS_SERVER:-auto}   # auto | browser-sync | python
+  while (( $# )); do
+    case $1 in
+      -p|--port)    port=${2:?--port needs a value}; shift 2 ;;
+      -b|--browser) browser=${2:?--browser needs a value}; shift 2 ;;
+      --no-open)    open=0; shift ;;
+      -h|--help)    usage; exit 0 ;;
+      *)            die "unknown docs option: $1" ;;
+    esac
+  done
+
+  local dir='' d
+  for d in "${MD_PREVIEW_DOCS:-}" "$ROOT/share/doc/md-preview/html" "$ROOT/site/_site"; do
+    if [[ -n $d && -r $d/index.html ]]; then dir=$d; break; fi
+  done
+  [[ -n $dir ]] || die "no documentation found; install it with 'make install-docs', or build it with 'make -C site'"
+
+  if [[ $server != python ]] && find_browser_sync; then
+    log "serving $dir"
+    local -a args=(start --server "$dir" --port "$port" --listen localhost
+                   --no-notify --no-ui --no-ghost-mode --no-online)
+    [[ -n $browser ]] && args+=(--browser "$browser")
+    (( open )) || args+=(--no-open)
+    exec "$BS" "${args[@]}"
+  fi
+  [[ $server != browser-sync ]] || die "browser-sync not found"
+
+  have python3 || die "neither browser-sync nor python3 found"
+  local url=http://localhost:$port/
+  log "serving $dir at $url (python http.server)"
+  if (( open )); then
+    ( sleep 1
+      if [[ -n $browser ]]; then "$browser" "$url"
+      elif have xdg-open; then xdg-open "$url"
+      fi ) >/dev/null 2>&1 &
+  fi
+  exec python3 -m http.server "$port" --bind 127.0.0.1 --directory "$dir"
+}
+
 cmd_doctor() {
   local ok=1 f
   row() { printf '%-14s %s\n' "$1" "$2"; }
@@ -366,12 +424,12 @@ cmd_doctor() {
     [[ -r $SHARE/$f ]] || { ok=0; row '' "missing $f"; }
   done
   if [[ -r $VENDOR/katex/katex.min.js ]]; then
-    row katex "$VENDOR/katex (local, $(cat "$VENDOR/katex/VERSION" 2>/dev/null))"
+    row katex "$VENDOR/katex ($(vendor_kind), $(cat "$VENDOR/katex/VERSION" 2>/dev/null))"
   else
     row katex "$KATEX_CDN (CDN; run '$PROG fetch' for offline use)"
   fi
   if [[ -r $VENDOR/mermaid/mermaid.min.js ]]; then
-    row mermaid "$VENDOR/mermaid (local, $(cat "$VENDOR/mermaid/VERSION" 2>/dev/null))"
+    row mermaid "$VENDOR/mermaid ($(vendor_kind), $(cat "$VENDOR/mermaid/VERSION" 2>/dev/null))"
   else
     row mermaid "$MERMAID_CDN (CDN)"
   fi
@@ -388,6 +446,7 @@ case ${1:-} in
   build)  shift; cmd_build "$@" ;;
   fetch)  shift; cmd_fetch "$@" ;;
   assets) shift; cmd_assets "$@" ;;
+  docs)   shift; cmd_docs "$@" ;;
   doctor) shift; cmd_doctor "$@" ;;
   _render) shift; render_serve "$@" ;;   # internal: invoked by entr
   *)      cmd_serve "$@" ;;

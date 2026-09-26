@@ -26,6 +26,7 @@ md-preview [serve] [options] FILE.md [-- PANDOC-ARGS...]
 md-preview build   [options] FILE.md [-- PANDOC-ARGS...]
 md-preview fetch   [--force]
 md-preview assets  DIR
+md-preview docs    [options]
 md-preview doctor
 md-preview help | version
 ```
@@ -70,6 +71,16 @@ Downloads KaTeX (the npm tarball's `dist/`) and `mermaid.min.js` into
 `$MD_PREVIEW_DATA/vendor/`. Skips anything already present unless
 `--force` is given. Requires `curl` and `tar`.
 
+md-preview uses KaTeX and mermaid from the first of:
+
+1. `$MD_PREVIEW_DATA/vendor/`, what `fetch` downloaded;
+2. `$SHARE/vendor/` (e.g. `/usr/share/md-preview/vendor/`), a copy installed
+   with md-preview by a package or `make install-vendor`;
+3. the jsDelivr CDN.
+
+`fetch` always writes to the first, so a fetched copy overrides a packaged
+one.
+
 ### `assets`
 
 Copies what `build --assets PREFIX` pages link to into `DIR`, the
@@ -78,16 +89,34 @@ directory that `PREFIX` points at:
 ```
 DIR/share/style.css
 DIR/share/md-preview.js
-DIR/vendor/katex/…          only if fetched; otherwise pages use the CDN
+DIR/vendor/katex/…          only if fetched or packaged; otherwise pages use the CDN
 DIR/vendor/mermaid/…
 ```
 
 Symlinks are dereferenced, so `DIR` can be uploaded as-is.
 
+### `docs`
+
+Serves this documentation (the project website: README, INSTALL,
+reference, demo, changelog, …) at http://localhost:6996 and opens it.
+
+| Option               | Default           | Meaning                                  |
+|----------------------|-------------------|------------------------------------------|
+| `-p`, `--port N`     | 6996 (`MD_PREVIEW_DOCS_PORT`) | port; browser-sync moves to the next free one if taken |
+| `-b`, `--browser NAME` | system default  | browser to open                          |
+| `--no-open`          | open              | don't open a browser                     |
+
+The site comes from the first of `$MD_PREVIEW_DOCS`,
+`<prefix>/share/doc/md-preview/html` (installed by `make install-docs` or a
+package), and `site/_site` in a source checkout (built by `make -C site`).
+It's served with browser-sync, or python's `http.server` on 127.0.0.1 if
+browser-sync isn't found (`MD_PREVIEW_DOCS_SERVER=python` forces that).
+
 ### `doctor`
 
-Prints the location and version of each dependency and asset. Exits with
-1 if something required is missing.
+Prints the location and version of each dependency and asset, and whether
+KaTeX and mermaid are `fetched` or `packaged`. Exits with 1 if something
+required is missing.
 
 ### Examples
 
@@ -112,7 +141,10 @@ md-preview build notes.md -o - | wc -c
 | `MD_PREVIEW_LISTEN`           | `localhost`                                  | default for `serve --listen` |
 | `MD_PREVIEW_BROWSER_SYNC`     | found on `PATH`, then via nvm                | path to the browser-sync executable |
 | `MD_PREVIEW_NVM_VERSION`      | `stable`                                     | version passed to `nvm use` when searching nvm |
-| `MD_PREVIEW_DATA`             | `${XDG_DATA_HOME:-~/.local/share}/md-preview` | data directory (holds `vendor/`; copied by `assets`) |
+| `MD_PREVIEW_DATA`             | `${XDG_DATA_HOME:-~/.local/share}/md-preview` | data directory (holds fetched `vendor/`) |
+| `MD_PREVIEW_DOCS`             | —                                            | site directory for `docs`, tried first |
+| `MD_PREVIEW_DOCS_PORT`        | `6996`                                       | port for `docs` |
+| `MD_PREVIEW_DOCS_SERVER`      | `auto`                                       | `docs` server: `auto` (browser-sync, else python), `browser-sync` or `python` |
 | `MD_PREVIEW_SHARE`            | `<script dir>/../share/md-preview`           | template, filter and stylesheet directory |
 | `MD_PREVIEW_KATEX_VERSION`    | `0.18.9`                                     | KaTeX version for `fetch` and the CDN fallback |
 | `MD_PREVIEW_MERMAID_VERSION`  | `12.0.0`                                     | mermaid version for `fetch` and the CDN fallback |
@@ -128,7 +160,9 @@ $PREFIX/share/md-preview/filter.lua       pandoc Lua filter
 $PREFIX/share/md-preview/style.css        stylesheet
 $PREFIX/share/md-preview/md-preview.js    page enhancements (anchors, copy, TOC)
 $PREFIX/share/md-preview/VERSION          version string
+$PREFIX/share/md-preview/vendor/          packaged KaTeX + mermaid (make install-vendor)
 $PREFIX/share/emacs/site-lisp/md-preview.el
+$PREFIX/share/doc/md-preview/html/        the website, for `docs` (make install-docs)
 
 $MD_PREVIEW_DATA/vendor/katex/            KaTeX dist (katex.min.js, fonts/, contrib/…)
 $MD_PREVIEW_DATA/vendor/mermaid/          mermaid.min.js
