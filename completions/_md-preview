@@ -24,6 +24,7 @@ build_opts=(
   '(--assets)--embed[self-contained HTML]'
   '(--embed)--assets[link assets relative to a prefix]:prefix:_directories'
   '--force[folders: render every page]'
+  '--base-url[folders: write sitemap.xml for a site at this URL]:URL: '
 )
 docs_opts=(
   '(-p --port)'{-p,--port}'[port]:port: '

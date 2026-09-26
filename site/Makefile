@@ -11,8 +11,8 @@
 # repository files to pages and adds titles, footers and the "View source"
 # link. KaTeX and mermaid are fetched once and self-hosted under
 # _site/_md-preview/. _site/folder-demo/ is tests/folder-sample built as it
-# is, to show folder mode. sitemap.xml lists every page for search engines,
-# with absolute URLs under SITE_URL.
+# is, to show folder mode. Both builds write a sitemap.xml (--base-url):
+# _site/sitemap.xml and _site/folder-demo/sitemap.xml.
 
 ROOT     := ..
 OUT      := _site
@@ -45,11 +45,11 @@ PANDOC_ARGS := --lua-filter links.lua --metadata-file pages.yaml \
 .PHONY: all stage fetch check serve clean
 
 all: stage $(BUILD)/nav.html | fetch
-	MD_PREVIEW_STATE=$(abspath $(BUILD))/state $(MDP) build $(STAGE) -o $(OUT) -- $(PANDOC_ARGS)
+	MD_PREVIEW_STATE=$(abspath $(BUILD))/state $(MDP) build $(STAGE) -o $(OUT) --base-url $(SITE_URL) -- $(PANDOC_ARGS)
 	cp site.css $(OUT)/$(ASSETS)/site.css
 	@# Folder mode, as md-preview renders a folder: tests/folder-sample.
-	MD_PREVIEW_STATE=$(abspath $(BUILD))/folder-demo-state $(MDP) build $(ROOT)/tests/folder-sample -o $(OUT)/folder-demo
-	sh sitemap.sh $(SITE_URL) $(ROOT) pages.yaml $(BUILD)/folder-demo-state/tree > $(OUT)/sitemap.xml
+	MD_PREVIEW_STATE=$(abspath $(BUILD))/folder-demo-state $(MDP) build $(ROOT)/tests/folder-sample -o $(OUT)/folder-demo \
+	  --base-url $(SITE_URL)folder-demo/
 	@echo "site built in $(OUT)/ ($(SHORT))"
 
 # Rebuilt every time; cheap. Symlinks keep each source's own mtime, so the

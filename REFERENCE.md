@@ -62,6 +62,7 @@ pages (default `DIR/_site`); see [Folder mode](#folder-mode).
 | `--embed`            | off                     | self-contained HTML (pandoc `--embed-resources`): CSS, KaTeX with fonts, mermaid and images are inlined. About 7 MB when the document has diagrams |
 | `--assets PREFIX`    | —                       | link the stylesheet, KaTeX and mermaid relative to `PREFIX/` (for publishing; lay them out with `md-preview assets`). Can't be combined with `--embed`. Single files only |
 | `--force`            | off                     | folders: render every page, not only those whose source changed |
+| `--base-url URL`     | `MD_PREVIEW_BASE_URL`   | folders: also write `sitemap.xml` for a site published at `URL` |
 | `-- ARGS…`           |                         | extra pandoc arguments                  |
 
 With neither `--embed` nor `--assets`, the page links to the stylesheet
@@ -157,6 +158,7 @@ md-preview build notes.md -o - | wc -c
 | `MD_PREVIEW_MERMAID_VERSION`  | `12.0.0`                                     | mermaid version for `fetch` and the CDN fallback |
 | `NVM_DIR`                     | —                                            | checked first when looking for `nvm.sh` |
 | `MD_PREVIEW_JOBS`             | number of CPUs                               | pages a folder build renders at once |
+| `MD_PREVIEW_BASE_URL`         | —                                            | default for `build --base-url` |
 | `MD_PREVIEW_STATE`            | `OUT/.md-preview`                            | where a folder build keeps its state |
 | `XDG_RUNTIME_DIR`             | `$TMPDIR` or `/tmp`                          | where `serve` creates its temporary directory |
 
@@ -439,6 +441,18 @@ script changes, when the pandoc arguments change, or with `--force`. Pages
 render in parallel (`MD_PREVIEW_JOBS`). Pages whose source is gone are
 removed. The state (the tree, a signature of what every page depends on,
 the list of pages) is kept in `OUT/.md-preview`, or `MD_PREVIEW_STATE`.
+
+**Sitemap.** With `--base-url URL` (or `MD_PREVIEW_BASE_URL`), `build`
+also writes `OUT/sitemap.xml` for search engines: one `<url>` per page,
+with folder indexes listed as the folder (`URL/notes/`, the root as `URL/`),
+and `<lastmod>` the date of the last git commit touching the page's source
+(following symlinks, in whatever repository the file is in), or the file's
+own date outside git. Generated listings have no source, so no date. It's
+rewritten on every build, and removed by a build without a base URL. A
+sitemap only covers URLs under its own folder, so a separate build
+published in a subfolder gets its own. (Search engines find it when you
+submit its URL, or through a `Sitemap:` line in the `robots.txt` at the
+root of the domain.)
 
 **Failures.** A page pandoc can't render gets an error page; the other
 pages still render, and `build` exits 1 afterwards, naming the files.

@@ -100,6 +100,9 @@ The complete reference, with examples, is served by **md-preview docs**.
 **\-\-force**
 :   Folders: render every page, not only those whose source changed.
 
+**\-\-base-url** *URL*
+:   Folders: also write *sitemap.xml*, for a site published at *URL*.
+
 ## docs
 
 **-p**, **\-\-port** *N*
@@ -151,6 +154,9 @@ Arguments after **\-\-** are passed to pandoc, for example
 
 **MD_PREVIEW_STATE**
 :   Where a folder build keeps its state (default *OUT/.md-preview*).
+
+**MD_PREVIEW_BASE_URL**
+:   Default for **build \-\-base-url**.
 
 **MD_PREVIEW_DOCS**, **MD_PREVIEW_DOCS_PORT**, **MD_PREVIEW_DOCS_SERVER**
 :   Site directory, port, and server (**auto**, **browser-sync** or

@@ -106,6 +106,22 @@ printf '# U\n\n[x](REPLACE-ME)\n' > "$SRC/u.md"
 check "user filters run before md-preview's"    grep -q 'href="guide/intro.html">x' "$W/userfilter/u.html"
 rm "$SRC/u.md"
 
+echo "== sitemap.xml"
+SMO=$W/sm
+"$MDP" build "$SRC" -o "$SMO" --base-url https://example.org/notes >/dev/null 2>&1
+check "--base-url writes sitemap.xml"           python3 -c "import sys, xml.etree.ElementTree as E; E.parse(sys.argv[1])" "$SMO/sitemap.xml"
+eq "  every page, listings included"            9 "$(grep -c '<url>' "$SMO/sitemap.xml")"
+check "  base gets a trailing slash; root index is the base" grep -q '<loc>https://example.org/notes/</loc>' "$SMO/sitemap.xml"
+check "  a folder's index is the folder"        grep -q '<loc>https://example.org/notes/notes/</loc>' "$SMO/sitemap.xml"
+check "  spaces encoded"                        grep -q '<loc>https://example.org/notes/notes/My%20Notes.html</loc>' "$SMO/sitemap.xml"
+check "  pages dated"                           grep -qE '<lastmod>[0-9]{4}-[0-9]{2}-[0-9]{2}</lastmod>' "$SMO/sitemap.xml"
+check "  listings not dated (no source)"        grep -q '<url><loc>https://example.org/notes/guide/</loc></url>' "$SMO/sitemap.xml"
+check "MD_PREVIEW_BASE_URL works too"           bash -c "MD_PREVIEW_BASE_URL=https://x.org/ '$MDP' build '$SRC' -o '$W/sm2' >/dev/null 2>&1 && grep -q '<loc>https://x.org/</loc>' '$W/sm2/sitemap.xml'"
+"$MDP" build "$SRC" -o "$SMO" >/dev/null 2>&1
+refute "a build without it removes the old one" test -e "$SMO/sitemap.xml"
+refute "--base-url rejected for a single file"  "$MDP" build --base-url https://x.org/ -o "$W/x.html" "$ROOT/test-sample.md"
+refute "no sitemap without --base-url"          test -e "$OUT/sitemap.xml"
+
 echo "== single files are unchanged"
 printf '# One\n\n[other](other.md)\n' > "$W/one.md"
 "$MDP" build -o "$W/one.html" "$W/one.md" 2>/dev/null

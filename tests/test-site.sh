@@ -56,25 +56,31 @@ refute "  without build state"           test -e "$OUT/folder-demo/.md-preview"
 check "  linked from the nav"            grep -q 'href="folder-demo/index.html"' "$OUT/index.html"
 
 echo "== sitemap.xml"
-SM=$OUT/sitemap.xml
-check "exists"                           test -s "$SM"
-check "is well-formed XML"               python3 -c "import sys, xml.etree.ElementTree as E; E.parse(sys.argv[1])" "$SM"
-locs=$(python3 -c "import sys, xml.etree.ElementTree as E
+# sitemap LOCS-VAR FILE: "loc lastmod" lines (lastmod "-" when absent)
+sitemap_locs() {
+  python3 -c "import sys, xml.etree.ElementTree as E
 ns={'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
-for u in E.parse(sys.argv[1]).getroot().findall('s:url', ns): print(u.find('s:loc', ns).text, u.find('s:lastmod', ns).text)" "$SM")
-eq "one URL per site page, plus the folder demo's" "$(( $(echo $pages | wc -w) + 7 ))" "$(wc -l <<<"$locs")"
-refute "every URL absolute, under the site" grep -v '^https://bvraghav.github.io/md-preview/' <<<"$locs"
-refute "every lastmod a date"            grep -vE ' [0-9]{4}-[0-9]{2}-[0-9]{2}$' <<<"$locs"
-check "the home page is the site root"   grep -q '^https://bvraghav.github.io/md-preview/ ' <<<"$locs"
-check "spaces encoded"                   grep -q 'folder-demo/notes/My%20Notes.html ' <<<"$locs"
-# each listed page exists in the build
+for u in E.parse(sys.argv[1]).getroot().findall('s:url', ns):
+    m = u.find('s:lastmod', ns)
+    print(u.find('s:loc', ns).text, m.text if m is not None else '-')" "$1"
+}
+SITE=https://bvraghav.github.io/md-preview/
+check "site: well-formed"                python3 -c "import sys, xml.etree.ElementTree as E; E.parse(sys.argv[1])" "$OUT/sitemap.xml"
+locs=$(sitemap_locs "$OUT/sitemap.xml")
+eq "site: one URL per page"              "$(echo $pages | wc -w)" "$(wc -l <<<"$locs")"
+check "site: home is the site root"      grep -q "^$SITE " <<<"$locs"
+refute "site: all under the site URL"    grep -v "^$SITE" <<<"$locs"
+refute "site: every page dated"          grep -vE ' [0-9]{4}-[0-9]{2}-[0-9]{2}$' <<<"$locs"
 missing=0
 while read -r loc _; do
-  path=${loc#https://bvraghav.github.io/md-preview/}; path=${path//%20/ }
-  [[ -z $path ]] && path=index.html
+  path=${loc#"$SITE"}; path=${path//%20/ }
+  [[ -z $path || $path == */ ]] && path+=index.html
   [[ -f $OUT/$path ]] || { missing=$((missing + 1)); note "missing: $path"; }
 done <<<"$locs"
-eq "every listed page exists"            0 "$missing"
+eq "site: every listed page exists"      0 "$missing"
+locs=$(sitemap_locs "$OUT/folder-demo/sitemap.xml")
+eq "folder demo: its own sitemap, 9 URLs" 9 "$(wc -l <<<"$locs")"
+check "  under folder-demo/"             grep -q "^${SITE}folder-demo/notes/My%20Notes.html " <<<"$locs"
 
 echo "== install-docs"
 D=$WORK/site-destdir; rm -rf "$D"

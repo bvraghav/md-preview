@@ -34,12 +34,15 @@ on every page and links between the files that just work.
   level-1 heading, before falling back to the file name.
 - `md-preview-before-html`: a template slot a user filter can fill per
   page, placed under any `--include-before-body` content.
+- **Sitemaps:** `md-preview build DIR --base-url URL` (or
+  `MD_PREVIEW_BASE_URL`) also writes `sitemap.xml`: every page, folder
+  indexes as the folder's URL, dated by the last commit touching each
+  page's source (or its file date outside git).
 - `MD_PREVIEW_STATE` moves a folder build's state (default
   `OUT/.md-preview`) elsewhere, e.g. to keep it out of a published site.
 - The project website is now built with folder mode: its pages are listed
   once, in `site/pages.yaml`, and it rebuilds incrementally. It also
-  publishes a folder demo, and a `sitemap.xml` for search engines (every
-  page, with the date of its source's last commit).
+  publishes a folder demo, and sitemaps for both (`--base-url`).
 
 ### Changed
 
