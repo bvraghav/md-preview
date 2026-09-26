@@ -1,6 +1,6 @@
 pkgbase = md-preview
 	pkgdesc = Live browser preview of Markdown with frontmatter, mermaid diagrams and KaTeX math
-	pkgver = 0.1.0
+	pkgver = 0.2.0
 	pkgrel = 1
 	url = https://github.com/bvraghav/md-preview
 	arch = any
@@ -14,7 +14,7 @@ pkgbase = md-preview
 	optdepends = python: serve docs when browser-sync is missing
 	optdepends = emacs: md-preview-mode
 	noextract = katex-0.18.9.tgz
-	source = md-preview-0.1.0.tar.gz::https://github.com/bvraghav/md-preview/archive/refs/tags/v0.1.0.tar.gz
+	source = md-preview-0.2.0.tar.gz::https://github.com/bvraghav/md-preview/archive/refs/tags/v0.2.0.tar.gz
 	source = katex-0.18.9.tgz::https://registry.npmjs.org/katex/-/katex-0.18.9.tgz
 	source = mermaid-12.0.0.min.js::https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.min.js
 	sha256sums = SKIP
