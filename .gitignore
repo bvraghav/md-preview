@@ -1,0 +1,9 @@
+# rendered output
+*.html
+!share/md-preview/template.html
+.check.log
+
+# emacs
+*.elc
+*~
+.#*

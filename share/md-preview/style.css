@@ -1,0 +1,237 @@
+/* md-preview — GitHub-flavoured reading style, light + dark. */
+
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #59636e;
+  --border: #d1d9e0;
+  --subtle: #f6f8fa;
+  --link: #0969da;
+  --mark: #fff8c5;
+  --note: #0969da;
+  --tip: #1a7f37;
+  --important: #8250df;
+  --warning: #9a6700;
+  --caution: #d1242f;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #9198a1;
+    --border: #3d444d;
+    --subtle: #151b23;
+    --link: #4493f8;
+    --mark: #bb800926;
+    --note: #4493f8;
+    --tip: #3fb950;
+    --important: #ab7df8;
+    --warning: #d29922;
+    --caution: #f85149;
+    color-scheme: dark;
+  }
+  /* pandoc's highlighting colours assume a light background */
+  div.sourceCode, pre > code.sourceCode { filter: brightness(1.35) saturate(0.9); }
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- chrome */
+
+.mdp-bar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 0.35rem 1rem;
+  background: var(--subtle);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font: 12px/1.4 var(--mono);
+}
+.mdp-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.markdown-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 16px 6rem;
+  overflow-wrap: break-word;
+}
+
+/* ----------------------------------------------------------- frontmatter */
+
+.mdp-frontmatter {
+  margin: 0 0 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--subtle);
+  font-size: 0.875rem;
+}
+.mdp-frontmatter > summary {
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.mdp-frontmatter > table { margin: 0; border: 0; width: 100%; display: table; }
+.mdp-frontmatter table table { margin: 0; }
+.mdp-frontmatter th { text-align: left; vertical-align: top; white-space: nowrap; font-family: var(--mono); font-weight: 500; }
+.mdp-frontmatter td > ul { margin: 0; padding-left: 1.2em; }
+.mdp-frontmatter td p { margin: 0; }
+
+/* --------------------------------------------------------- title block */
+
+#title-block-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+#title-block-header .title { margin: 0 0 0.25rem; font-size: 2.25em; border: 0; }
+#title-block-header .subtitle { margin: 0 0 0.75rem; font-size: 1.25em; color: var(--muted); }
+#title-block-header .author,
+#title-block-header .date { margin: 0; color: var(--muted); }
+.abstract { margin-top: 1rem; font-size: 0.95em; }
+.abstract-title { font-weight: 600; }
+
+/* ------------------------------------------------------------ elements */
+
+h1, h2, h3, h4, h5, h6 { margin: 1.5em 0 0.6em; font-weight: 600; line-height: 1.25; }
+h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.25em; }
+h4 { font-size: 1em; }
+h5 { font-size: 0.875em; }
+h6 { font-size: 0.85em; color: var(--muted); }
+
+p, ul, ol, dl, table, pre, blockquote, details, figure { margin: 0 0 1rem; }
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+hr { height: 0.25em; margin: 1.5rem 0; border: 0; background: var(--border); }
+
+mark { background: var(--mark); color: inherit; padding: 0 0.15em; border-radius: 2px; }
+kbd {
+  padding: 0.1em 0.4em; font: 0.8em var(--mono);
+  border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px;
+  background: var(--subtle);
+}
+
+img, svg, video { max-width: 100%; }
+figure { text-align: center; }
+figcaption { color: var(--muted); font-size: 0.9em; }
+
+ul, ol { padding-left: 2em; }
+li + li { margin-top: 0.25em; }
+ul.task-list { list-style: none; padding-left: 1.2em; }
+ul.task-list input[type="checkbox"] { margin: 0 0.4em 0 -1.2em; vertical-align: middle; }
+
+dt { font-weight: 600; margin-top: 0.75rem; }
+dd { margin: 0 0 0.5rem 1.5rem; }
+
+blockquote {
+  margin-left: 0; padding: 0 1em;
+  color: var(--muted);
+  border-left: 0.25em solid var(--border);
+}
+
+/* ---------------------------------------------------------------- code */
+
+code, pre, samp { font-family: var(--mono); font-size: 0.875em; }
+:not(pre) > code {
+  padding: 0.2em 0.4em;
+  background: var(--subtle);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+pre, div.sourceCode {
+  background: var(--subtle);
+  border-radius: 6px;
+}
+pre { padding: 1rem; overflow: auto; line-height: 1.45; }
+pre > code { font-size: 1em; }
+div.sourceCode { margin: 0 0 1rem; overflow: auto; }
+div.sourceCode > pre { margin: 0; background: transparent; }
+
+/* ------------------------------------------------------------- tables */
+
+table {
+  display: block; width: max-content; max-width: 100%; overflow: auto;
+  border-collapse: collapse; border-spacing: 0;
+}
+th, td { padding: 0.4rem 0.8rem; border: 1px solid var(--border); }
+th { font-weight: 600; }
+tbody tr:nth-child(even) { background: var(--subtle); }
+caption { color: var(--muted); padding: 0.4rem; font-size: 0.9em; }
+
+/* -------------------------------------------------------------- alerts */
+
+div.note, div.tip, div.important, div.warning, div.caution {
+  margin: 0 0 1rem;
+  padding: 0.5rem 1rem;
+  border-left: 0.25em solid var(--c);
+}
+div.note      { --c: var(--note); }
+div.tip       { --c: var(--tip); }
+div.important { --c: var(--important); }
+div.warning   { --c: var(--warning); }
+div.caution   { --c: var(--caution); }
+div.note > .title, div.tip > .title, div.important > .title,
+div.warning > .title, div.caution > .title { color: var(--c); font-weight: 600; }
+div.note > .title p, div.tip > .title p, div.important > .title p,
+div.warning > .title p, div.caution > .title p { margin: 0 0 0.25rem; }
+div.note > :last-child, div.tip > :last-child, div.important > :last-child,
+div.warning > :last-child, div.caution > :last-child { margin-bottom: 0; }
+
+/* ------------------------------------------------------ math & diagrams */
+
+/* Scroll wide equations horizontally instead of overflowing the page.
+   Padding keeps \tag{} labels (absolutely positioned) from forcing a
+   scrollbar on equations that do fit. */
+.math.display { display: block; }
+.katex-display {
+  margin: 0.5em 0;
+  padding: 0.25em 0.1em;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+pre.mermaid {
+  background: transparent;
+  text-align: center;
+  font-family: var(--sans);
+}
+/* hide the source until mermaid has replaced it */
+pre.mermaid:not([data-processed]) { color: transparent; min-height: 3rem; }
+
+/* ----------------------------------------------------------- footnotes */
+
+section.footnotes { margin-top: 3rem; font-size: 0.875em; color: var(--muted); }
+section.footnotes hr { height: 1px; }
+a.footnote-ref sup { font-size: 0.75em; }
+
+/* ---------------------------------------------------------- citations */
+
+div.csl-entry { clear: both; margin-bottom: 0.5em; }
+.hanging-indent div.csl-entry { margin-left: 2em; text-indent: -2em; }
+div.csl-left-margin { min-width: 2em; float: left; }
+div.csl-right-inline { margin-left: 2em; padding-left: 1em; }
+
+/* ------------------------------------------------------------- print */
+
+@media print {
+  .mdp-bar { display: none; }
+  .markdown-body { max-width: none; padding: 0; }
+}
+
+/* pandoc [text]{.smallcaps} and [text]{.underline} */
+.smallcaps { font-variant: small-caps; }
+.underline { text-decoration: underline; }

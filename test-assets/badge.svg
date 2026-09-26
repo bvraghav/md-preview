@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="md-preview">
+  <rect width="220" height="48" rx="8" fill="#0969da"/>
+  <rect x="120" width="100" height="48" rx="8" fill="#1a7f37"/>
+  <rect x="120" width="16" height="48" fill="#1a7f37"/>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="600" fill="#fff">
+    <text x="16" y="30">md-preview</text>
+    <text x="136" y="30">image ok</text>
+  </g>
+</svg>

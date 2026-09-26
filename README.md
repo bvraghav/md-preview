@@ -1,0 +1,254 @@
+# md-preview
+
+Live browser preview for Markdown with YAML frontmatter, mermaid diagrams
+and KaTeX math. Built from pandoc, entr and browser-sync. Meant to be
+started from Emacs, but works from any shell.
+
+```sh
+md-preview notes.md
+```
+
+That renders `notes.md`, opens it in your browser, and re-renders and
+reloads the page every time you save the file. Stop it with `Ctrl-C`.
+
+---
+
+## Contents
+
+- [What you get](#what-you-get)
+- [Setup](#setup)
+  - [1. Install the required tools](#1-install-the-required-tools)
+  - [2. Install md-preview](#2-install-md-preview)
+  - [3. Fetch KaTeX and mermaid for offline use](#3-fetch-katex-and-mermaid-for-offline-use)
+  - [4. Check the installation](#4-check-the-installation)
+  - [5. Try the test sample](#5-try-the-test-sample)
+  - [6. Emacs integration](#6-emacs-integration)
+- [Everyday use](#everyday-use)
+- [Troubleshooting](#troubleshooting)
+- [Uninstall](#uninstall)
+
+## What you get
+
+- **Frontmatter**: YAML metadata becomes the title block (title, subtitle,
+  authors, date, abstract). A collapsible table above the title lists every
+  key, including nested maps and lists.
+- **KaTeX math**: `$…$`, `$$…$$`, `\(…\)`, `\[…\]`, fenced `math` blocks,
+  and bare `align`, `equation` and `gather` environments. `\newcommand`
+  macros work, and so do `mhchem` (`\ce{…}`, `\pu{…}`) and copy-as-TeX.
+- **Mermaid diagrams**: fenced `mermaid` blocks render in the browser, with
+  a dark theme when your system uses dark mode.
+- **Pandoc Markdown**: tables, footnotes, task lists, definition lists,
+  GitHub alerts (`> [!NOTE]`), `==mark==`, `:emoji:`, fenced divs,
+  syntax highlighting, citations.
+- **Live reload that keeps your place**: the scroll position survives
+  reloads. If pandoc fails, the browser shows its error message instead
+  of the page.
+- **Private and offline**: the server binds to `localhost`. After a
+  one-time `md-preview fetch`, no network access is needed.
+
+Full details are in [REFERENCE.md](REFERENCE.md).
+
+## Setup
+
+The commands below are for Arch Linux. Other distributions have the same
+packages under the same or similar names.
+
+### 1. Install the required tools
+
+| Tool           | Why                                   | Install (Arch)                  |
+|----------------|---------------------------------------|---------------------------------|
+| `pandoc` ≥ 3.1 | Markdown → HTML, Lua filter           | `sudo pacman -S pandoc-cli`     |
+| `entr`         | re-runs pandoc when the file changes  | `sudo pacman -S entr`           |
+| `browser-sync` | local server + browser live reload    | `npm install -g browser-sync`   |
+| `curl`, `tar`  | `md-preview fetch` only               | usually already installed       |
+
+**pandoc.** Any pandoc 3.x works. On Arch, `pandoc-cli` is linked against
+about 250 Haskell shared libraries and takes about 1.5 s just to start,
+so each re-render takes several seconds. The statically linked release
+starts in well under a second and makes live preview much snappier:
+
+```sh
+# either: the AUR binary package
+yay -S pandoc-bin
+# or: the upstream static release
+curl -LO https://github.com/jgm/pandoc/releases/download/3.10.2/pandoc-3.10.2-linux-amd64.tar.gz
+tar -xzf pandoc-3.10.2-linux-amd64.tar.gz -C ~/.local --strip-components=1
+```
+
+**browser-sync** needs Node.js. If you manage Node with
+[nvm](https://github.com/nvm-sh/nvm):
+
+```sh
+nvm use stable
+npm install -g browser-sync
+```
+
+md-preview finds a browser-sync installed under nvm even when nvm isn't
+loaded, for example when a GUI Emacs starts it without your shell's PATH.
+It checks `$NVM_DIR`, `~/.config/nvm`, `~/.nvm` and `/usr/share/nvm`, in
+that order, then runs `nvm use stable`.
+
+### 2. Install md-preview
+
+Clone the repository, then pick **one** of these:
+
+```sh
+git clone https://github.com/bvraghav/md-preview.git
+cd md-preview
+
+# a) symlink (recommended while you tweak styles or the filter)
+make link                      # ~/.local/bin/md-preview -> ./bin/md-preview
+
+# b) copy
+make install                   # PREFIX defaults to ~/.local
+make install PREFIX=/usr/local # system-wide (use sudo)
+```
+
+Both put `md-preview` in `$PREFIX/bin`, so make sure `~/.local/bin` is on
+your `PATH`. `make install` also copies the stylesheet, template and
+filter to `$PREFIX/share/md-preview/`, and the Emacs package to
+`$PREFIX/share/emacs/site-lisp/`.
+
+The script finds its support files by following its own symlink.
+Symlinked, it uses the repository's `share/md-preview/`, so style edits
+take effect on the next save.
+
+### 3. Fetch KaTeX and mermaid for offline use
+
+```sh
+md-preview fetch
+```
+
+This downloads pinned versions (KaTeX 0.18.9, mermaid 12.0.0) into
+`~/.local/share/md-preview/vendor/`, about 7 MB. Without it, pages load
+both libraries from the jsDelivr CDN. That also works, but needs a
+network connection and is slower.
+
+To use different versions:
+
+```sh
+MD_PREVIEW_KATEX_VERSION=0.16.22 MD_PREVIEW_MERMAID_VERSION=11.12.0 md-preview fetch --force
+```
+
+The same variables must also be set when running `md-preview` if the
+vendor directory is absent and you want those versions from the CDN.
+
+### 4. Check the installation
+
+```sh
+md-preview doctor
+```
+
+```
+md-preview 0.0.1
+
+pandoc         pandoc 3.10.2
+entr           /usr/bin/entr
+browser-sync   /home/you/.config/nvm/versions/node/v24.19.0/bin/browser-sync (3.0.4)
+share          /home/you/src/md-preview/share/md-preview
+katex          /home/you/.local/share/md-preview/vendor/katex (local, 0.18.9)
+mermaid        /home/you/.local/share/md-preview/vendor/mermaid (local, 12.0.0)
+
+all good
+```
+
+### 5. Try the test sample
+
+```sh
+md-preview test-sample.md      # live, in the browser
+make check                     # non-interactive: renders and sanity-checks the HTML
+```
+
+[`test-sample.md`](test-sample.md) exercises every supported feature. Each
+section has an **Expect:** note saying what should appear.
+
+### 6. Emacs integration
+
+`emacs/md-preview.el` adds a minor mode that starts one `md-preview`
+process per buffer and stops it when you disable the mode or kill the
+buffer.
+
+```elisp
+;; with `make install' the file is in ~/.local/share/emacs/site-lisp;
+;; with `make link', point load-path at the repository instead.
+(add-to-list 'load-path "~/src/md-preview/emacs")
+(require 'md-preview)
+
+(with-eval-after-load 'markdown-mode
+  (define-key markdown-mode-map (kbd "C-c C-c p") #'md-preview-mode))
+```
+
+Or with `use-package`:
+
+```elisp
+(use-package md-preview
+  :load-path "~/src/md-preview/emacs"
+  :commands (md-preview-mode md-preview-start md-preview-stop)
+  :bind (:map markdown-mode-map ("C-c C-c p" . md-preview-mode))
+  :custom
+  (md-preview-args '("--browser" "firefox")))
+```
+
+| Command                 | Does                                                  |
+|-------------------------|-------------------------------------------------------|
+| `md-preview-mode`       | toggle the preview for this buffer                    |
+| `md-preview-start/stop` | the same, as separate commands                        |
+| `md-preview-browse`     | open the running preview's URL again                  |
+| `md-preview-show-log`   | show the process output (pandoc warnings, errors)     |
+
+If `md-preview` itself isn't on Emacs' `exec-path`, set
+`md-preview-program` to its absolute path. You can also add
+[`exec-path-from-shell`](https://github.com/purcell/exec-path-from-shell)
+to your config.
+
+## Everyday use
+
+```sh
+md-preview notes.md                     # live preview (same as: md-preview serve notes.md)
+md-preview serve -p 4000 notes.md       # fixed port
+md-preview serve -b firefox notes.md    # a specific browser
+md-preview serve --no-open notes.md     # just serve; open the printed URL yourself
+md-preview serve notes.md -- --toc      # extra pandoc options after --
+
+md-preview build notes.md               # one-shot: writes notes.html next to notes.md
+md-preview build --embed notes.md -o /tmp/notes.html   # single self-contained file
+```
+
+Relative image links resolve against the Markdown file's directory.
+
+## Troubleshooting
+
+**Every save takes 3–4 seconds to show up.** That's pandoc starting up.
+Run `time pandoc --version`; if it takes more than about 0.3 s, switch to
+the static pandoc build (see [step 1](#1-install-the-required-tools)).
+
+**`browser-sync not found`.** Run `md-preview doctor`. If browser-sync is
+somewhere unusual, set `MD_PREVIEW_BROWSER_SYNC=/path/to/browser-sync`.
+Node must also be on `PATH`, or reachable through nvm.
+
+**Math shows as raw TeX.** Most likely KaTeX didn't load. If you haven't
+run `md-preview fetch`, check your network. A single expression in red
+means KaTeX couldn't parse it; hover over it to see the error.
+
+**A price like `$20` turned into math.** Pandoc pairs dollar signs within
+a paragraph. Write `\$20` in paragraphs that contain math.
+
+**`\(` no longer produces a literal parenthesis.** md-preview enables
+`tex_math_single_backslash`, which makes `\(…\)` math. To turn it off, set
+`MD_PREVIEW_FROM=markdown+alerts+mark+emoji`.
+
+**Stale temp directories.** Each preview uses a directory under
+`$XDG_RUNTIME_DIR` that's removed on exit. It is left behind only if the
+process is killed with `SIGKILL`, and it's cleared at logout anyway.
+
+## Uninstall
+
+```sh
+make uninstall                          # same PREFIX as used for install
+rm -rf ~/.local/share/md-preview        # fetched KaTeX / mermaid
+npm uninstall -g browser-sync           # if nothing else uses it
+```
+
+## License
+
+MIT, see [LICENSE](LICENSE).

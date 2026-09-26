@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="$if(lang)$$lang$$else$en$endif$"$if(dir)$ dir="$dir$"$endif$>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="pandoc, md-preview $md-preview-version$">
+$for(author-meta)$
+  <meta name="author" content="$author-meta$">
+$endfor$
+$if(date-meta)$
+  <meta name="dcterms.date" content="$date-meta$">
+$endif$
+  <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
+$for(css)$
+  <link rel="stylesheet" href="$css$">
+$endfor$
+$if(highlighting-css)$
+  <style>
+$highlighting-css$
+  </style>
+$endif$
+$if(math)$
+  $math$
+  <script defer src="$md-preview-katex$contrib/mhchem.min.js"></script>
+  <script defer src="$md-preview-katex$contrib/copy-tex.min.js"></script>
+$endif$
+$for(header-includes)$
+  $header-includes$
+$endfor$
+  <script>
+    // Keep the scroll position across live reloads. Restored on load and
+    // again after mermaid has rendered, since diagrams change the layout.
+    (function () {
+      var key = 'md-preview-scroll:' + location.pathname;
+      addEventListener('beforeunload', function () {
+        try { sessionStorage.setItem(key, String(scrollY)); } catch (e) {}
+      });
+      window.mdPreviewRestoreScroll = function () {
+        try {
+          var y = sessionStorage.getItem(key);
+          if (y !== null) scrollTo(0, +y);
+        } catch (e) {}
+      };
+      addEventListener('load', window.mdPreviewRestoreScroll);
+    })();
+  </script>
+</head>
+<body>
+<div class="mdp-bar">
+  <span class="mdp-file">$md-preview-file$</span>
+  <span class="mdp-built">built $md-preview-built$</span>
+</div>
+<main class="markdown-body">
+$for(include-before)$
+$include-before$
+$endfor$
+$md-preview-frontmatter-html$
+$if(title)$
+<header id="title-block-header">
+<h1 class="title">$title$</h1>
+$if(subtitle)$
+<p class="subtitle">$subtitle$</p>
+$endif$
+$if(author)$
+<p class="author">$for(author)$$author$$sep$ · $endfor$</p>
+$endif$
+$if(date)$
+<p class="date">$date$</p>
+$endif$
+$if(abstract)$
+<div class="abstract">
+<div class="abstract-title">$if(abstract-title)$$abstract-title$$else$Abstract$endif$</div>
+$abstract$
+</div>
+$endif$
+</header>
+$endif$
+$if(toc)$
+<nav id="$idprefix$TOC" role="doc-toc">
+$if(toc-title)$
+<h2 id="$idprefix$toc-title">$toc-title$</h2>
+$endif$
+$table-of-contents$
+</nav>
+$endif$
+$body$
+$for(include-after)$
+$include-after$
+$endfor$
+</main>
+$if(md-preview-has-mermaid)$
+<script src="$md-preview-mermaid$"></script>
+<script>
+  (function () {
+    var dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    // deterministicIds: SVG ids from a counter rather than the clock, so
+    // diagrams rendered within the same millisecond never collide.
+    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default',
+                         securityLevel: 'strict', deterministicIds: true });
+    mermaid.run({ querySelector: 'pre.mermaid' })
+      .catch(function (e) { console.error('[md-preview] mermaid:', e); })
+      .finally(function () {
+        document.documentElement.dataset.mermaid = 'done';
+        window.mdPreviewRestoreScroll();
+      });
+  })();
+</script>
+$endif$
+</body>
+</html>

@@ -1,0 +1,361 @@
+#!/usr/bin/env bash
+# md-preview — live browser preview of Markdown with YAML frontmatter,
+# mermaid diagrams and KaTeX math, built on pandoc + entr + browser-sync.
+#
+# See README.md for setup and REFERENCE.md for the full interface.
+
+set -euo pipefail
+
+PROG=md-preview
+SELF=$(readlink -f "${BASH_SOURCE[0]}")
+ROOT=$(cd "$(dirname "$SELF")/.." && pwd)
+
+# ---------------------------------------------------------------- config ---
+
+SHARE=${MD_PREVIEW_SHARE:-$ROOT/share/md-preview}
+DATA=${MD_PREVIEW_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/md-preview}
+VENDOR=$DATA/vendor
+
+KATEX_VERSION=${MD_PREVIEW_KATEX_VERSION:-0.18.9}
+MERMAID_VERSION=${MD_PREVIEW_MERMAID_VERSION:-12.0.0}
+KATEX_CDN=https://cdn.jsdelivr.net/npm/katex@$KATEX_VERSION/dist/
+MERMAID_CDN=https://cdn.jsdelivr.net/npm/mermaid@$MERMAID_VERSION/dist/mermaid.min.js
+
+FROM=${MD_PREVIEW_FROM:-markdown+tex_math_single_backslash+alerts+mark+emoji}
+# open | closed | hide; unset lets the document's own md-preview-frontmatter
+# key decide (the filter defaults to closed).
+FRONTMATTER=${MD_PREVIEW_FRONTMATTER:-}
+
+VERSION=unknown
+for f in "$SHARE/VERSION" "$ROOT/VERSION"; do
+  if [[ -r $f ]]; then VERSION=$(<"$f"); break; fi
+done
+
+# --------------------------------------------------------------- helpers ---
+
+log()  { printf '[%s] %s\n' "$PROG" "$*" >&2; }
+die()  { log "error: $*"; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
+now_ms() { date +%s%3N; }
+
+usage() {
+  cat <<EOF
+$PROG $VERSION — live Markdown preview (pandoc + entr + browser-sync)
+
+Usage:
+  $PROG [serve] [options] FILE.md    live preview in the browser (default)
+  $PROG build   [options] FILE.md    render once to HTML
+  $PROG fetch   [--force]            download KaTeX + mermaid for offline use
+  $PROG doctor                       check dependencies and assets
+  $PROG help | version
+
+serve options:
+  -p, --port N         port for browser-sync (default: 3000, or next free)
+  -b, --browser NAME   browser to open (default: system default)
+      --no-open        do not open a browser
+      --listen ADDR    address to bind (default: localhost; 0.0.0.0 = LAN)
+
+build options:
+  -o, --output FILE    output file (default: FILE.html next to FILE.md; '-' = stdout)
+      --embed          self-contained HTML (inline CSS, JS, fonts)
+
+Any arguments after '--' are passed to pandoc verbatim.
+EOF
+}
+
+# browser-sync is usually an npm global. When spawned from a GUI Emacs, the
+# nvm-managed PATH is often missing, so fall back to loading nvm ourselves.
+# Sets BS. Must not run in a subshell: `nvm use` changes PATH, and
+# browser-sync needs that PATH to find node.
+BS=''
+find_browser_sync() {
+  if [[ -n ${MD_PREVIEW_BROWSER_SYNC:-} ]]; then
+    BS=$MD_PREVIEW_BROWSER_SYNC; return
+  fi
+  if have browser-sync; then BS=$(command -v browser-sync); return; fi
+  local nvm_sh
+  for nvm_sh in "${NVM_DIR:-/nonexistent}/nvm.sh" \
+                "${XDG_CONFIG_HOME:-$HOME/.config}/nvm/nvm.sh" \
+                "$HOME/.nvm/nvm.sh" \
+                /usr/share/nvm/nvm.sh; do
+    [[ -r $nvm_sh ]] || continue
+    export NVM_DIR=${NVM_DIR:-$(dirname "$nvm_sh")}
+    # nvm.sh is not `set -u` clean.
+    set +u
+    # shellcheck disable=SC1090
+    source "$nvm_sh" --no-use
+    nvm use --silent "${MD_PREVIEW_NVM_VERSION:-stable}" >/dev/null 2>&1 || true
+    set -u
+    if have browser-sync; then BS=$(command -v browser-sync); return; fi
+  done
+  return 1
+}
+
+# Print "katex-base mermaid-url" for the given mode.
+#   serve: URLs relative to the served directory (vendor dir is symlinked in)
+#   build: absolute filesystem paths (work from file:// and for --embed)
+#   Either mode falls back to the CDN when the vendor dir is missing.
+asset_urls() {
+  local mode=$1 katex mermaid
+  if [[ -r $VENDOR/katex/katex.min.js ]]; then
+    if [[ $mode == serve ]]; then katex=_md-preview/vendor/katex/
+    else katex=$VENDOR/katex/; fi
+  else
+    katex=$KATEX_CDN
+  fi
+  if [[ -r $VENDOR/mermaid/mermaid.min.js ]]; then
+    if [[ $mode == serve ]]; then mermaid=_md-preview/vendor/mermaid/mermaid.min.js
+    else mermaid=$VENDOR/mermaid/mermaid.min.js; fi
+  else
+    mermaid=$MERMAID_CDN
+  fi
+  printf '%s %s\n' "$katex" "$mermaid"
+}
+
+# run_pandoc MODE SRC OUT [extra pandoc args...]
+run_pandoc() {
+  local mode=$1 src=$2 out=$3; shift 3
+  local katex mermaid css
+  read -r katex mermaid < <(asset_urls "$mode")
+  if [[ $mode == serve ]]; then css=_md-preview/share/style.css
+  else css=$SHARE/style.css; fi
+
+  local -a extra=()
+  # Word-splitting of MD_PREVIEW_PANDOC_ARGS is intentional.
+  # shellcheck disable=SC2206
+  [[ -n ${MD_PREVIEW_PANDOC_ARGS:-} ]] && extra=($MD_PREVIEW_PANDOC_ARGS)
+  [[ -n $FRONTMATTER ]] && extra+=(-M "md-preview-frontmatter=$FRONTMATTER")
+
+  pandoc "$src" \
+    --from "$FROM" --to html5 --standalone \
+    --template "$SHARE/template.html" \
+    --lua-filter "$SHARE/filter.lua" \
+    --katex="$katex" \
+    --css "$css" \
+    --resource-path "$(dirname "$src"):." \
+    -V md-preview-katex="$katex" \
+    -V md-preview-mermaid="$mermaid" \
+    -V md-preview-version="$VERSION" \
+    -V md-preview-built="$(date +%H:%M:%S)" \
+    -M md-preview-file="$(basename "$src")" \
+    "${extra[@]}" "$@" \
+    --output "$out"
+}
+
+html_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+
+# Render SRC into DIR/index.html for the live server. Writes atomically, and
+# on failure writes an error page instead so the browser shows what broke.
+render_serve() {
+  local src=$1 dir=$2; shift 2
+  local tmp=$dir/.index.html.tmp err=$dir/.pandoc.err t0 rc=0
+  t0=$(now_ms)
+  # Remember which version of the source this render saw (see cmd_serve).
+  touch -r "$src" "$dir/.stamp" 2>/dev/null || true
+  run_pandoc serve "$src" "$tmp" "$@" 2>"$err" || rc=$?
+  if [[ -s $err ]]; then sed "s/^/[pandoc] /" "$err" >&2; fi
+  if (( rc == 0 )); then
+    mv -f "$tmp" "$dir/index.html"
+    log "rendered $(basename "$src") in $(( $(now_ms) - t0 )) ms"
+  else
+    {
+      printf '<!DOCTYPE html><html><head><meta charset="utf-8">'
+      printf '<title>%s: pandoc error</title>' "$PROG"
+      printf '<link rel="stylesheet" href="_md-preview/share/style.css"></head>'
+      printf '<body><main class="markdown-body"><h1>pandoc failed (exit %d)</h1><pre>' "$rc"
+      html_escape <"$err"
+      printf '</pre></main></body></html>\n'
+    } >"$tmp"
+    mv -f "$tmp" "$dir/index.html"
+    log "pandoc failed (exit $rc); error page served"
+  fi
+}
+
+# ------------------------------------------------------------ subcommands ---
+
+cmd_build() {
+  local src='' out='' embed=0
+  local -a pass=()
+  while (( $# )); do
+    case $1 in
+      -o|--output) out=${2:?--output needs a value}; shift 2 ;;
+      --embed)     embed=1; shift ;;
+      --)          shift; pass=("$@"); break ;;
+      -h|--help)   usage; exit 0 ;;
+      -*)          die "unknown build option: $1" ;;
+      *)           [[ -z $src ]] || die "only one input file allowed"; src=$1; shift ;;
+    esac
+  done
+  [[ -n $src ]] || die "no input file (try '$PROG help')"
+  [[ -r $src ]] || die "cannot read: $src"
+  [[ -n $out ]] || out=${src%.*}.html
+  (( embed )) && pass=(--embed-resources "${pass[@]}")
+  run_pandoc build "$src" "$out" "${pass[@]}"
+  [[ $out == - ]] || log "wrote $out"
+}
+
+cmd_serve() {
+  local src='' port='' browser='' open=1 listen=${MD_PREVIEW_LISTEN:-localhost}
+  local -a pass=()
+  while (( $# )); do
+    case $1 in
+      -p|--port)    port=${2:?--port needs a value}; shift 2 ;;
+      --listen)     listen=${2:?--listen needs a value}; shift 2 ;;
+      -b|--browser) browser=${2:?--browser needs a value}; shift 2 ;;
+      --no-open)    open=0; shift ;;
+      --)           shift; pass=("$@"); break ;;
+      -h|--help)    usage; exit 0 ;;
+      -*)           die "unknown serve option: $1" ;;
+      *)            [[ -z $src ]] || die "only one input file allowed"; src=$1; shift ;;
+    esac
+  done
+  [[ -n $src ]] || die "no input file (try '$PROG help')"
+  [[ -r $src ]] || die "cannot read: $src"
+  src=$(readlink -f "$src")
+
+  have pandoc || die "pandoc not found"
+  have entr   || die "entr not found"
+  find_browser_sync || die "browser-sync not found (npm i -g browser-sync, or set MD_PREVIEW_BROWSER_SYNC)"
+
+  [[ -r $VENDOR/katex/katex.min.js ]] ||
+    log "note: no local KaTeX/mermaid; using CDN (run '$PROG fetch' for offline use)"
+
+  # Globals, not locals: the EXIT trap runs after this function has returned.
+  SERVE_DIR=$(mktemp -d "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/md-preview.XXXXXX")
+  local dir=$SERVE_DIR
+  mkdir -p "$dir/_md-preview"
+  ln -s "$SHARE" "$dir/_md-preview/share"
+  if [[ -d $VENDOR ]]; then ln -s "$VENDOR" "$dir/_md-preview/vendor"; fi
+
+  WATCH_PID='' BS_PID=''
+  cleanup() {
+    trap - EXIT INT TERM HUP
+    if [[ -n $WATCH_PID ]]; then
+      # Collect entr before killing the loop, or it is reparented and missed.
+      local kids
+      kids=$(pgrep -P "$WATCH_PID" || true)
+      kill "$WATCH_PID" 2>/dev/null || true
+      # shellcheck disable=SC2086
+      [[ -z $kids ]] || kill $kids 2>/dev/null || true
+    fi
+    if [[ -n $BS_PID ]]; then kill "$BS_PID" 2>/dev/null || true; fi
+    wait 2>/dev/null || true
+    rm -rf "$SERVE_DIR"
+  }
+  trap cleanup EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM HUP
+
+  render_serve "$src" "$dir" "${pass[@]}"
+
+  # Watch the source plus our own share files (handy when tweaking styles).
+  # entr exits when a watched file is replaced (editors saving via rename)
+  # or when -d sees a new file in the directory (backups, lock files); just
+  # restart it, re-rendering first if the source changed in the meantime.
+  (
+    while :; do
+      if [[ ! -e $src ]]; then sleep 0.2; continue; fi
+      if [[ $src -nt $dir/.stamp ]]; then "$SELF" _render "$src" "$dir" "${pass[@]}"; fi
+      printf '%s\n' "$src" "$SHARE"/{template.html,filter.lua,style.css} |
+        entr -dnp "$SELF" _render "$src" "$dir" "${pass[@]}" || true
+      sleep 0.1
+    done
+  ) &
+  WATCH_PID=$!
+
+  local -a bs_args=(
+    start
+    --server "$dir"
+    --serveStatic "$(dirname "$src")"
+    --files "$dir/index.html"
+    --watchEvents change add
+    --listen "$listen"
+    --no-notify --no-ui --no-ghost-mode --no-online
+  )
+  [[ -n $port ]]    && bs_args+=(--port "$port")
+  [[ -n $browser ]] && bs_args+=(--browser "$browser")
+  (( open ))        || bs_args+=(--no-open)
+
+  log "serving $(basename "$src") from $dir"
+  "$BS" "${bs_args[@]}" &
+  BS_PID=$!
+  wait "$BS_PID"
+}
+
+cmd_fetch() {
+  local force=0
+  [[ ${1:-} == --force ]] && force=1
+  have curl || die "curl not found"
+  have tar  || die "tar not found"
+
+  mkdir -p "$VENDOR"
+  local tmp
+  tmp=$(mktemp -d)
+  # shellcheck disable=SC2064
+  trap "rm -rf '$tmp'" EXIT
+
+  if (( force )) || [[ ! -r $VENDOR/katex/katex.min.js ]]; then
+    log "fetching KaTeX $KATEX_VERSION"
+    curl -fsSL "https://registry.npmjs.org/katex/-/katex-$KATEX_VERSION.tgz" |
+      tar -xz -C "$tmp" package/dist
+    rm -rf "$VENDOR/katex"
+    mv "$tmp/package/dist" "$VENDOR/katex"
+    printf '%s\n' "$KATEX_VERSION" >"$VENDOR/katex/VERSION"
+  else
+    log "KaTeX $(cat "$VENDOR/katex/VERSION" 2>/dev/null) already present (use --force to refetch)"
+  fi
+
+  if (( force )) || [[ ! -r $VENDOR/mermaid/mermaid.min.js ]]; then
+    log "fetching mermaid $MERMAID_VERSION"
+    mkdir -p "$tmp/mermaid"
+    curl -fsSL -o "$tmp/mermaid/mermaid.min.js" "$MERMAID_CDN"
+    printf '%s\n' "$MERMAID_VERSION" >"$tmp/mermaid/VERSION"
+    rm -rf "$VENDOR/mermaid"
+    mv "$tmp/mermaid" "$VENDOR/mermaid"
+  else
+    log "mermaid $(cat "$VENDOR/mermaid/VERSION" 2>/dev/null) already present (use --force to refetch)"
+  fi
+  log "assets in $VENDOR"
+}
+
+cmd_doctor() {
+  local ok=1 f
+  row() { printf '%-14s %s\n' "$1" "$2"; }
+  printf '%s %s\n\n' "$PROG" "$VERSION"
+  if have pandoc; then row pandoc "$(pandoc --version | head -1)"; else ok=0; row pandoc MISSING; fi
+  if have entr;   then row entr "$(command -v entr)";            else ok=0; row entr MISSING; fi
+  if find_browser_sync; then
+    row browser-sync "$BS ($("$BS" --version 2>/dev/null || echo '?'))"
+  else
+    ok=0; row browser-sync MISSING
+  fi
+  row share "$SHARE"
+  for f in template.html filter.lua style.css; do
+    [[ -r $SHARE/$f ]] || { ok=0; row '' "missing $f"; }
+  done
+  if [[ -r $VENDOR/katex/katex.min.js ]]; then
+    row katex "$VENDOR/katex (local, $(cat "$VENDOR/katex/VERSION" 2>/dev/null))"
+  else
+    row katex "$KATEX_CDN (CDN; run '$PROG fetch' for offline use)"
+  fi
+  if [[ -r $VENDOR/mermaid/mermaid.min.js ]]; then
+    row mermaid "$VENDOR/mermaid (local, $(cat "$VENDOR/mermaid/VERSION" 2>/dev/null))"
+  else
+    row mermaid "$MERMAID_CDN (CDN)"
+  fi
+  echo
+  if (( ok )); then echo "all good"; else echo "problems found"; return 1; fi
+}
+
+# ------------------------------------------------------------------ main ---
+
+case ${1:-} in
+  ''|help|-h|--help) usage ;;
+  version|-V|--version) printf '%s %s\n' "$PROG" "$VERSION" ;;
+  serve)  shift; cmd_serve "$@" ;;
+  build)  shift; cmd_build "$@" ;;
+  fetch)  shift; cmd_fetch "$@" ;;
+  doctor) shift; cmd_doctor "$@" ;;
+  _render) shift; render_serve "$@" ;;   # internal: invoked by entr
+  *)      cmd_serve "$@" ;;
+esac
