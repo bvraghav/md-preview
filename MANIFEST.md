@@ -12,6 +12,7 @@ Every file in the repository and what it does.
 | `CHANGELOG.md`  | Release history (Keep a Changelog format) |
 | `VERSION`       | Current version, read by the script at runtime (`0.0.2`) |
 | `LICENSE`       | MIT license |
+| `TODO.md`       | Roadmap: the intent and the agreed plan for upcoming releases |
 | `Makefile`      | `install`, `link`, `uninstall`, `check`, `clean` |
 | `.gitignore`    | Ignores rendered HTML, check artefacts and the site build |
 
@@ -31,9 +32,9 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 
 | File                            | Purpose |
 |---------------------------------|---------|
-| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE → lower-case `.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
+| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO → lower-case `.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
 | `site/links.lua`                | Pandoc filter: rewrites links between repo files to site pages, and other relative links to GitHub |
-| `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted), marks the current page |
+| `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted) with a "More" dropdown for secondary pages; marks the current page |
 | `site/site.css`                 | Site-only styles (nav, footer), layered on `style.css` |
 | `.github/workflows/site.yml`    | GitHub Actions: `make check`, build the site, deploy to Pages on push to `main` (PRs build only) |
 

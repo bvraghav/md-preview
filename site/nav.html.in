@@ -1,19 +1,57 @@
-<nav class="site-nav">
+<nav class="site-nav" aria-label="Site">
   <a class="site-brand" href="index.html">md-preview</a>
   <a href="index.html">Home</a>
   <a href="demo.html">Demo</a>
   <a href="reference.html">Reference</a>
   <a href="changelog.html">Changelog</a>
-  <a href="manifest.html">Manifest</a>
-  <a href="license.html">License</a>
+  <!-- <details> keeps the menu usable without JavaScript. -->
+  <details class="site-more">
+    <summary>More</summary>
+    <div class="site-menu">
+      <a href="manifest.html">Manifest</a>
+      <a href="license.html">License</a>
+      <a href="todo.html">TODO</a>
+    </div>
+  </details>
   <a class="site-ext" href="@REPO_URL@">GitHub</a>
 </nav>
 <script>
-  // Mark the current page; "/" and "/index.html" both count as Home.
   (function () {
+    var nav = document.querySelector('.site-nav');
+    var more = nav.querySelector('.site-more');
+    var menu = more.querySelector('.site-menu');
+    var summary = more.querySelector('summary');
+
+    // Mark the current page; "/" and "/index.html" both count as Home.
     var here = location.pathname.replace(/\/$/, '/index.html').split('/').pop();
-    document.querySelectorAll('.site-nav a:not(.site-brand)').forEach(function (a) {
-      if (a.getAttribute('href') === here) a.setAttribute('aria-current', 'page');
+    nav.querySelectorAll('a:not(.site-brand)').forEach(function (a) {
+      if (a.getAttribute('href') !== here) return;
+      a.setAttribute('aria-current', 'page');
+      if (menu.contains(a)) more.classList.add('site-current');
+    });
+
+    function close(refocus) {
+      if (!more.open) return;
+      more.open = false;
+      if (refocus) summary.focus();
+    }
+
+    // Open towards whichever side has room.
+    more.addEventListener('toggle', function () {
+      if (!more.open) return;
+      menu.classList.remove('site-menu-left');
+      if (menu.getBoundingClientRect().left < 8) menu.classList.add('site-menu-left');
+    });
+
+    // Close on a click outside, on Escape, and when focus leaves the menu.
+    document.addEventListener('click', function (e) {
+      if (!more.contains(e.target)) close(false);
+    });
+    more.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); close(true); }
+    });
+    more.addEventListener('focusout', function (e) {
+      if (e.relatedTarget && !more.contains(e.relatedTarget)) close(false);
     });
   })();
 </script>

@@ -8,6 +8,7 @@
 #   README.md       -> index.html        test-sample.md -> demo.html
 #   CHANGELOG.md    -> changelog.html    LICENSE        -> license.html
 #   MANIFEST.md     -> manifest.html     REFERENCE.md   -> reference.html
+#   TODO.md         -> todo.html
 #
 # KaTeX and mermaid are fetched once (md-preview fetch) and self-hosted
 # under _site/_md-preview/, laid out by `md-preview assets`.
@@ -25,7 +26,7 @@ VERSION  := $(shell cat $(ROOT)/VERSION)
 
 # Everything a page depends on besides its own source.
 DEPS := $(MDP) $(wildcard $(ROOT)/share/md-preview/*) $(ROOT)/VERSION \
-        links.lua $(BUILD)/nav.html Makefile
+        links.lua $(BUILD)/nav.html site.css Makefile
 
 PANDOC_ARGS := --lua-filter links.lua \
                --css $(ASSETS)/site.css \
@@ -57,6 +58,7 @@ $(eval $(call page,changelog,CHANGELOG.md,md-preview · Changelog))
 $(eval $(call page,license,LICENSE,md-preview · License))
 $(eval $(call page,manifest,MANIFEST.md,md-preview · Manifest))
 $(eval $(call page,reference,REFERENCE.md,md-preview · Reference))
+$(eval $(call page,todo,TODO.md,md-preview · TODO))
 
 .PHONY: all fetch assets serve clean
 

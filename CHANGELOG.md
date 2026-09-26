@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `TODO.md` roadmap, published on the site as `todo.html`.
+- Site navigation: a "More" dropdown (Manifest, License, TODO). It's a
+  `<details>` element, so it works without JavaScript; with JavaScript it
+  closes on outside click, Escape or focus leaving, opens towards the side
+  with room, and highlights "More" when the current page is inside it.
+
 ## [0.0.2] - 2026-09-26
 
 ### Added

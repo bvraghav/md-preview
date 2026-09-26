@@ -11,8 +11,10 @@ md-preview notes.md
 That renders `notes.md`, opens it in your browser, and re-renders and
 reloads the page every time you save the file. Stop it with `Ctrl-C`.
 
-**Website:** <https://bvraghav.github.io/md-preview/> · **Live demo:**
-[`test-sample.md` as rendered by md-preview](https://bvraghav.github.io/md-preview/demo.html).
+**Website:** <https://bvraghav.github.io/md-preview/>  
+**Live demo:**
+[`test-sample.md` as rendered by
+md-preview](https://bvraghav.github.io/md-preview/demo.html)  
 The whole site is built with md-preview itself; see [`site/`](site/Makefile).
 
 ---

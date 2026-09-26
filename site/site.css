@@ -23,6 +23,46 @@
 }
 .site-nav .site-ext::after { content: " ↗"; }
 
+/* "More" dropdown: a <details>, so it works without JavaScript. */
+.site-more { position: relative; margin: 0; }
+.site-more > summary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--muted);
+  user-select: none;
+}
+.site-more > summary::-webkit-details-marker { display: none; }
+.site-more > summary::after {
+  content: "";
+  display: inline-block;
+  margin-left: 0.35em;
+  vertical-align: 0.15em;
+  border: 0.3em solid transparent;
+  border-top-color: currentColor;
+  border-bottom: 0;
+  transition: transform 0.15s;
+}
+.site-more[open] > summary::after { transform: rotate(180deg); }
+.site-more > summary:hover,
+.site-more[open] > summary { color: var(--link); }
+.site-more.site-current > summary { color: var(--fg); font-weight: 600; }
+.site-more > summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 3px; }
+
+.site-menu {
+  position: absolute; top: calc(100% + 0.4rem); right: 0; z-index: 20;
+  display: flex; flex-direction: column;
+  min-width: 10rem;
+  padding: 0.3rem 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+.site-menu.site-menu-left { right: auto; left: 0; }
+.site-menu a { padding: 0.35rem 0.9rem; white-space: nowrap; }
+.site-menu a:hover,
+.site-menu a:focus-visible { background: var(--subtle); color: var(--link); outline: none; }
+
 .site-footer {
   margin-top: 4rem;
   padding-top: 1rem;

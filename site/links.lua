@@ -15,6 +15,7 @@ local pages = {
   ['LICENSE']        = 'license.html',
   ['MANIFEST.md']    = 'manifest.html',
   ['REFERENCE.md']   = 'reference.html',
+  ['TODO.md']        = 'todo.html',
 }
 
 local stringify = pandoc.utils.stringify
