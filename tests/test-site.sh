@@ -14,7 +14,10 @@ echo "== build"
 if make -s -C site >"$WORK/site-build.log" 2>&1; then ok "make -C site"; else
   bad "make -C site"; sed 's/^/     /' "$WORK/site-build.log"; finish; exit
 fi
-refute "no pandoc warnings"  grep -q '^\[WARNING\]' "$WORK/site-build.log"
+# folder builds prefix pandoc's messages: "[pandoc] page.md: [WARNING] ..."
+refute "no pandoc warnings"  grep -q '\[WARNING\]' "$WORK/site-build.log"
+check "incremental: a second build renders nothing" bash -c "make -s -C site 2>&1 | grep -q 'updated 0 of 11 pages'"
+refute "no build state in the published site" test -e "$OUT/.md-preview"
 
 pages="index install emacs demo demo-source changelog license manifest reference todo contributing"
 for p in $pages; do check "page $p.html" test -s "$OUT/$p.html"; done

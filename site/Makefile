@@ -1,26 +1,24 @@
-# site/ — build the project website with md-preview itself.
+# site/ — build the project website with md-preview itself, in folder mode.
 #
 #   make              build the site into _site/
 #   make serve        preview _site/ at http://localhost:8000
 #   make check        verify demo-source.html reproduces test-sample.md exactly
 #   make clean        remove _site/ and _build/
 #
-# Pages:
-#   README.md       -> index.html        test-sample.md -> demo.html
-#   CHANGELOG.md    -> changelog.html    LICENSE        -> license.html
-#   MANIFEST.md     -> manifest.html     REFERENCE.md   -> reference.html
-#   TODO.md         -> todo.html         INSTALL.md     -> install.html
-#   CONTRIBUTING.md -> contributing.html emacs/INSTALL.md -> emacs.html
-#   test-sample.md  -> demo-source.html  (View source: verbatim, round-trip checked)
-#
-# KaTeX and mermaid are fetched once (md-preview fetch) and self-hosted
-# under _site/_md-preview/, laid out by `md-preview assets`.
+# The pages are listed in pages.yaml. Each source is staged in _build/src as
+# <page>.md (a symlink; demo-source.md is generated from test-sample.md), and
+# the folder is built with `md-preview build`. links.lua maps links between
+# repository files to pages and adds titles, footers and the "View source"
+# link. KaTeX and mermaid are fetched once and self-hosted under
+# _site/_md-preview/.
 
 ROOT     := ..
 OUT      := _site
 BUILD    := _build
+STAGE    := $(BUILD)/src
 MDP      := $(ROOT)/bin/md-preview
 ASSETS   := _md-preview
+ABSROOT  := $(abspath $(ROOT))
 
 VERSION  := $(shell cat $(ROOT)/VERSION)
 REPO_URL ?= https://github.com/bvraghav/md-preview
@@ -31,81 +29,53 @@ REF      ?= $(shell cd $(ROOT) && [ "$$(git rev-parse --show-toplevel 2>/dev/nul
                 && git rev-parse HEAD || echo v$(VERSION))
 SHORT    := $(shell printf %.7s $(REF))
 
-# Everything a page depends on besides its own source.
-DEPS := $(MDP) $(wildcard $(ROOT)/share/md-preview/*) $(ROOT)/VERSION \
-        links.lua $(BUILD)/nav.html $(BUILD)/source-link.html site.css Makefile
-
-PANDOC_ARGS := --lua-filter links.lua \
+PANDOC_ARGS := --lua-filter links.lua --metadata-file pages.yaml \
                --css $(ASSETS)/site.css \
                --include-before-body $(BUILD)/nav.html \
-               -M md-preview-site-repo=$(REPO_URL) -M md-preview-site-ref=$(REF)
+               --preserve-tabs \
+               -M md-preview-tree=false \
+               -M md-preview-site-repo=$(REPO_URL) \
+               -M md-preview-site-ref=$(REF) \
+               -M md-preview-site-version=$(VERSION)
 
 .DEFAULT_GOAL := all
+.PHONY: all stage fetch check serve clean
 
-PAGE_FILES :=
+all: stage $(BUILD)/nav.html | fetch
+	MD_PREVIEW_STATE=$(abspath $(BUILD))/state $(MDP) build $(STAGE) -o $(OUT) -- $(PANDOC_ARGS)
+	cp site.css $(OUT)/$(ASSETS)/site.css
+	@echo "site built in $(OUT)/ ($(SHORT))"
 
-# $(call page,NAME,SOURCE,PAGETITLE,EXTRA-ARGS,INPUT)
-#   SOURCE      repository-relative source, linked from the footer
-#   PAGETITLE   empty: use the document's title
-#   EXTRA-ARGS  more pandoc arguments for this page
-#   INPUT       file to render when it isn't SOURCE itself (a generated one)
-define page
-$(OUT)/$(1).html: $(or $(5),$(ROOT)/$(2)) $(DEPS) | $(OUT) fetch
-	@printf '%s\n' \
-	  '<footer class="site-footer">' \
-	  'Rendered by md-preview $(VERSION) from' \
-	  '<a href="$(REPO_URL)/blob/$(REF)/$(2)"><code>$(2)</code></a>' \
-	  'at <a href="$(REPO_URL)/commit/$(REF)"><code>$(SHORT)</code></a>.' \
-	  '</footer>' > $(BUILD)/$(1).footer.html
-	$(MDP) build --assets $(ASSETS) -o $$@ $$< -- $(PANDOC_ARGS) \
-	  --include-after-body $(BUILD)/$(1).footer.html $(4) \
-	  $(if $(3),-M 'pagetitle=$(3)')
-PAGE_FILES += $(OUT)/$(1).html
-endef
+# Rebuilt every time; cheap. Symlinks keep each source's own mtime, so the
+# folder build still only renders pages whose source changed.
+stage: $(BUILD)/demo-source.md
+	rm -rf $(STAGE)
+	mkdir -p $(STAGE)
+	awk '/^ *- page:/ { page = $$3 } /^ *source:/ { print page, $$2 }' pages.yaml | \
+	  while read -r page source; do \
+	    if [ "$$page" = demo-source ]; then ln -s $(abspath $(BUILD))/demo-source.md $(STAGE)/$$page.md; \
+	    else ln -s $(ABSROOT)/$$source $(STAGE)/$$page.md; fi; \
+	  done
+	ln -s $(ABSROOT)/test-assets $(STAGE)/test-assets
 
-# README has its own hand-written Contents, so no automatic TOC.
-$(eval $(call page,index,README.md,md-preview,-M md-preview-toc=false))
-$(eval $(call page,demo,test-sample.md,,--include-before-body $(BUILD)/source-link.html))
-$(eval $(call page,demo-source,test-sample.md,md-preview · Source of test-sample.md,--preserve-tabs,$(BUILD)/demo-source.md))
-$(eval $(call page,changelog,CHANGELOG.md,md-preview · Changelog))
-$(eval $(call page,license,LICENSE,md-preview · License))
-$(eval $(call page,manifest,MANIFEST.md,md-preview · Manifest))
-$(eval $(call page,reference,REFERENCE.md,md-preview · Reference))
-$(eval $(call page,todo,TODO.md,md-preview · TODO))
-$(eval $(call page,install,INSTALL.md,md-preview · Install))
-$(eval $(call page,contributing,CONTRIBUTING.md,md-preview · Contributing))
-$(eval $(call page,emacs,emacs/INSTALL.md,md-preview · Emacs,-M md-preview-site-srcdir=emacs))
-
-.PHONY: all fetch assets check serve clean
-
-all: $(PAGE_FILES) assets
-	@echo "site built in $(OUT)/ ($(words $(PAGE_FILES)) pages, $(SHORT))"
+# View source: test-sample.md verbatim inside a fence nothing in it can close.
+# The back link is written as test-sample.md; links.lua maps it to demo.html.
+# Only replaced when its content changes, so its page isn't re-rendered.
+$(BUILD)/demo-source.md: $(ROOT)/test-sample.md source-page.sh | $(BUILD)
+	sh source-page.sh $< '[← Back to the rendered demo](test-sample.md)' > $@.tmp
+	cmp -s $@.tmp $@ && rm $@.tmp || mv $@.tmp $@
 
 # Idempotent: skips what is already downloaded.
 fetch:
 	@$(MDP) fetch
 
-assets: | $(OUT) fetch
-	$(MDP) assets $(OUT)/$(ASSETS)
-	cp site.css $(OUT)/$(ASSETS)/site.css
-	rm -rf $(OUT)/test-assets
-	cp -r $(ROOT)/test-assets $(OUT)/test-assets
-
-# View source: test-sample.md verbatim inside a fence nothing in it can close.
-# The back link is written as test-sample.md; links.lua maps it to demo.html.
-$(BUILD)/demo-source.md: $(ROOT)/test-sample.md source-page.sh | $(BUILD)
-	sh source-page.sh $< '[← Back to the rendered demo](test-sample.md)' > $@
-
-$(BUILD)/source-link.html: Makefile | $(BUILD)
-	printf '%s\n' '<p class="site-source-link"><a href="demo-source.html">View source</a></p>' > $@
-
-check: $(OUT)/demo-source.html
-	python3 roundtrip.py $< $(ROOT)/test-sample.md
+check:
+	python3 roundtrip.py $(OUT)/demo-source.html $(ROOT)/test-sample.md
 
 $(BUILD)/nav.html: nav.html.in Makefile | $(BUILD)
 	sed 's|@REPO_URL@|$(REPO_URL)|g' $< > $@
 
-$(OUT) $(BUILD):
+$(BUILD):
 	mkdir -p $@
 
 serve: all

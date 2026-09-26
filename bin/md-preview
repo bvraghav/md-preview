@@ -151,15 +151,17 @@ run_pandoc() {
   [[ -n $FRONTMATTER ]] && extra+=(-M "md-preview-frontmatter=$FRONTMATTER")
   [[ -n $TOC ]] && extra+=(-M "md-preview-toc=$TOC")
 
-  # User filters (in "$@" and MD_PREVIEW_PANDOC_ARGS) run before ours, so
-  # they see the document as written.
+  # Order matters for options that add up: our stylesheet comes before the
+  # user's (so theirs override it), and user filters (in "$@" and
+  # MD_PREVIEW_PANDOC_ARGS) run before ours, so they see the document as
+  # written.
   pandoc "$src" \
     --from "$FROM" --to html5 --standalone \
     --template "$SHARE/template.html" \
+    --css "$css" \
     "${extra[@]}" "$@" \
     --lua-filter "$SHARE/filter.lua" \
     --katex="$katex" \
-    --css "$css" \
     --toc \
     --resource-path "$(dirname "$src"):." \
     -V md-preview-katex="$katex" \
@@ -217,7 +219,7 @@ error_page() {
 # Builds are incremental: a page is rendered again only when its source is
 # newer. Everything is rendered again when the set of files changes (every
 # page's tree changes) or md-preview itself does. Pages render in parallel.
-# State lives in OUT/.md-preview.
+# State lives in OUT/.md-preview, or MD_PREVIEW_STATE.
 
 FOLDER_ASSETS=_md-preview
 
@@ -328,7 +330,7 @@ folder_build() {
   local src=$1 out=$2 mode=$3; shift 3
   local force=0
   if [[ ${1:-} == --force ]]; then force=1; shift; fi
-  local state=$out/.md-preview t0 kind a b
+  local state=${MD_PREVIEW_STATE:-$out/.md-preview} t0 kind a b
   mkdir -p "$state"
   # One build at a time (the watcher's, and one entr starts).
   local lock_fd

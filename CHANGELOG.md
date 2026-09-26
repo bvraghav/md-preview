@@ -25,11 +25,18 @@ All notable changes to this project are documented here. The format follows
   `index.html` doesn't shadow the preview.
 - A page without a `title` now takes its `<title>` from its first
   level-1 heading, before falling back to the file name.
+- `md-preview-before-html`: a template slot a user filter can fill per
+  page, placed under any `--include-before-body` content.
+- `MD_PREVIEW_STATE` moves a folder build's state (default
+  `OUT/.md-preview`) elsewhere, e.g. to keep it out of a published site.
+- The project website is now built with folder mode: its pages are listed
+  once, in `site/pages.yaml`, and it rebuilds incrementally.
 
 ### Changed
 
 - User pandoc filters (after `--`, or in `MD_PREVIEW_PANDOC_ARGS`) now run
-  before md-preview's own, so they see the document as written.
+  before md-preview's own, so they see the document as written. User
+  stylesheets still come after md-preview's, so they override it.
 
 ## [0.1.0] - 2026-09-26
 

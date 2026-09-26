@@ -1,0 +1,52 @@
+# site/pages.yaml — the website's pages. One source of truth for:
+#   site/Makefile  stages each source as <page>.md for `md-preview build`
+#                  (it reads the "page:" and "source:" lines, so keep one
+#                  key per line, in this order)
+#   site/links.lua maps links between repository files to these pages, and
+#                  gives each page its title, footer and extras
+#
+# page:         output name (<page>.html)
+# source:       repository file it's built from (for demo-source: the file
+#               it shows); linked from the footer
+# title:        <title>; omit to use the document's own
+# toc:          false to hide the automatic table of contents
+# source-link:  page to link as "View source"
+# generated:    true if the staged file is generated, not the source itself
+
+md-preview-site:
+  pages:
+    - page: index
+      source: README.md
+      title: md-preview
+      toc: false
+    - page: install
+      source: INSTALL.md
+      title: md-preview · Install
+    - page: emacs
+      source: emacs/INSTALL.md
+      title: md-preview · Emacs
+    - page: demo
+      source: test-sample.md
+      source-link: demo-source
+    - page: demo-source
+      source: test-sample.md
+      title: md-preview · Source of test-sample.md
+      generated: true
+    - page: reference
+      source: REFERENCE.md
+      title: md-preview · Reference
+    - page: changelog
+      source: CHANGELOG.md
+      title: md-preview · Changelog
+    - page: manifest
+      source: MANIFEST.md
+      title: md-preview · Manifest
+    - page: license
+      source: LICENSE
+      title: md-preview · License
+    - page: todo
+      source: TODO.md
+      title: md-preview · TODO
+    - page: contributing
+      source: CONTRIBUTING.md
+      title: md-preview · Contributing
