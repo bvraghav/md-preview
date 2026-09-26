@@ -1,6 +1,6 @@
 # md-preview reference
 
-Complete interface for md-preview 0.0.1. For installation and a quick start
+Complete interface for md-preview 0.0.2. For installation and a quick start
 see [README.md](README.md).
 
 - [Command line](#command-line)
@@ -24,6 +24,7 @@ see [README.md](README.md).
 md-preview [serve] [options] FILE.md [-- PANDOC-ARGS...]
 md-preview build   [options] FILE.md [-- PANDOC-ARGS...]
 md-preview fetch   [--force]
+md-preview assets  DIR
 md-preview doctor
 md-preview help | version
 ```
@@ -53,11 +54,12 @@ Renders `FILE.md` once and exits.
 |----------------------|-------------------------|-----------------------------------------|
 | `-o`, `--output FILE` | `FILE.html` next to the input | output path; `-` writes to stdout |
 | `--embed`            | off                     | self-contained HTML (pandoc `--embed-resources`): CSS, KaTeX with fonts, mermaid and images are inlined. About 7 MB when the document has diagrams |
+| `--assets PREFIX`    | —                       | link the stylesheet, KaTeX and mermaid relative to `PREFIX/` (for publishing; lay them out with `md-preview assets`). Can't be combined with `--embed` |
 | `-- ARGS…`           |                         | extra pandoc arguments                  |
 
-Without `--embed`, the page links to the stylesheet and to local KaTeX
-and mermaid by absolute filesystem path. So it works when opened from
-disk on the same machine, but isn't portable. Relative image links are
+With neither `--embed` nor `--assets`, the page links to the stylesheet
+and to local KaTeX and mermaid by absolute filesystem path. So it works
+when opened from disk on the same machine, but isn't portable. Relative image links are
 kept as written, so they only resolve if the output sits next to the
 Markdown file (the default).
 
@@ -66,6 +68,19 @@ Markdown file (the default).
 Downloads KaTeX (the npm tarball's `dist/`) and `mermaid.min.js` into
 `$MD_PREVIEW_DATA/vendor/`. Skips anything already present unless
 `--force` is given. Requires `curl` and `tar`.
+
+### `assets`
+
+Copies what `build --assets PREFIX` pages link to into `DIR`, the
+directory that `PREFIX` points at:
+
+```
+DIR/share/style.css
+DIR/vendor/katex/…          only if fetched; otherwise pages use the CDN
+DIR/vendor/mermaid/…
+```
+
+Symlinks are dereferenced, so `DIR` can be uploaded as-is.
 
 ### `doctor`
 
@@ -79,6 +94,8 @@ md-preview notes.md
 md-preview serve --port 4000 --browser firefox notes.md
 md-preview serve --no-open notes.md -- --toc --number-sections
 md-preview build --embed notes.md -o ~/share/notes.html
+md-preview build --assets _md-preview notes.md -o public/index.html
+md-preview assets public/_md-preview
 md-preview build notes.md -o - | wc -c
 ```
 
@@ -92,7 +109,7 @@ md-preview build notes.md -o - | wc -c
 | `MD_PREVIEW_LISTEN`           | `localhost`                                  | default for `serve --listen` |
 | `MD_PREVIEW_BROWSER_SYNC`     | found on `PATH`, then via nvm                | path to the browser-sync executable |
 | `MD_PREVIEW_NVM_VERSION`      | `stable`                                     | version passed to `nvm use` when searching nvm |
-| `MD_PREVIEW_DATA`             | `${XDG_DATA_HOME:-~/.local/share}/md-preview` | data directory (holds `vendor/`) |
+| `MD_PREVIEW_DATA`             | `${XDG_DATA_HOME:-~/.local/share}/md-preview` | data directory (holds `vendor/`; copied by `assets`) |
 | `MD_PREVIEW_SHARE`            | `<script dir>/../share/md-preview`           | template, filter and stylesheet directory |
 | `MD_PREVIEW_KATEX_VERSION`    | `0.18.9`                                     | KaTeX version for `fetch` and the CDN fallback |
 | `MD_PREVIEW_MERMAID_VERSION`  | `12.0.0`                                     | mermaid version for `fetch` and the CDN fallback |
@@ -293,10 +310,15 @@ usual variables (`title`, `author`, `date`, `abstract`, `toc`,
 
 Asset URLs depend on the mode:
 
-| Mode    | KaTeX / mermaid (fetched)                  | Not fetched   | Stylesheet |
-|---------|--------------------------------------------|---------------|------------|
-| `serve` | `_md-preview/vendor/…` (relative)          | jsDelivr CDN  | `_md-preview/share/style.css` |
-| `build` | absolute path under `$MD_PREVIEW_DATA/vendor/` | jsDelivr CDN | absolute path to `style.css` |
+| Mode                     | KaTeX / mermaid (fetched)                  | Not fetched   | Stylesheet |
+|--------------------------|--------------------------------------------|---------------|------------|
+| `serve`                  | `_md-preview/vendor/…` (relative)          | jsDelivr CDN  | `_md-preview/share/style.css` |
+| `build --assets PREFIX`  | `PREFIX/vendor/…` (relative)               | jsDelivr CDN  | `PREFIX/share/style.css` |
+| `build`                  | absolute path under `$MD_PREVIEW_DATA/vendor/` | jsDelivr CDN | absolute path to `style.css` |
+
+"Fetched" means fetched on the machine running the build. With
+`--assets`, run `md-preview assets` on the same machine so the copied files
+match the URLs.
 
 ## Lua filter
 

@@ -10,10 +10,10 @@ Every file in the repository and what it does.
 | `REFERENCE.md`  | Complete reference: CLI, environment, dialect, math, diagrams, template, filter, Emacs API |
 | `MANIFEST.md`   | This file |
 | `CHANGELOG.md`  | Release history (Keep a Changelog format) |
-| `VERSION`       | Current version, read by the script at runtime (`0.0.1`) |
+| `VERSION`       | Current version, read by the script at runtime (`0.0.2`) |
 | `LICENSE`       | MIT license |
 | `Makefile`      | `install`, `link`, `uninstall`, `check`, `clean` |
-| `.gitignore`    | Ignores rendered HTML and check artefacts |
+| `.gitignore`    | Ignores rendered HTML, check artefacts and the site build |
 
 ## Program
 
@@ -25,12 +25,24 @@ Every file in the repository and what it does.
 | `share/md-preview/style.css`       | GitHub-like light/dark stylesheet |
 | `emacs/md-preview.el`              | Emacs package: `md-preview-mode` and commands |
 
+## Website
+
+The project site, built by md-preview itself and deployed to GitHub Pages.
+
+| File                            | Purpose |
+|---------------------------------|---------|
+| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE → lower-case `.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
+| `site/links.lua`                | Pandoc filter: rewrites links between repo files to site pages, and other relative links to GitHub |
+| `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted), marks the current page |
+| `site/site.css`                 | Site-only styles (nav, footer), layered on `style.css` |
+| `.github/workflows/site.yml`    | GitHub Actions: `make check`, build the site, deploy to Pages on push to `main` (PRs build only) |
+
 ## Test material
 
 | File                     | Purpose |
 |--------------------------|---------|
 | `test-sample.md`         | Covers every feature: frontmatter, every math syntax, 10 mermaid diagrams, pandoc Markdown blocks. Sections carry **Expect:** notes |
-| `test-assets/badge.svg`  | Image referenced by the sample, to check relative image links |
+| `test-assets/badge.svg`  | Image referenced by the sample, to check relative image links; published with the demo (`site/_site/test-assets/`) |
 
 ## Not in the repository
 
@@ -39,3 +51,4 @@ Every file in the repository and what it does.
 | `~/.local/share/md-preview/vendor/`           | `md-preview fetch` (KaTeX, mermaid) |
 | `$XDG_RUNTIME_DIR/md-preview.XXXXXX/`         | `md-preview serve`, removed on exit |
 | `test-sample.html`                            | `make check` |
+| `site/_site/`, `site/_build/`                 | `make -C site` |

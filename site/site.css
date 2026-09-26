@@ -1,0 +1,36 @@
+/* site.css — additions for the published site, on top of md-preview's
+   style.css. Uses its colour tokens, so light/dark follow automatically. */
+
+/* The live-preview bar (file name, render time) means nothing on the web. */
+.mdp-bar { display: none; }
+
+.markdown-body { padding-top: 1rem; }
+
+.site-nav {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem;
+  margin: 0 0 2rem;
+  padding: 0.5rem 0 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+.site-nav a { color: var(--muted); }
+.site-nav a:hover { color: var(--link); text-decoration: none; }
+.site-nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
+.site-nav .site-brand {
+  margin-right: auto;
+  color: var(--fg);
+  font: 600 1.1rem var(--mono);
+}
+.site-nav .site-ext::after { content: " ↗"; }
+
+.site-footer {
+  margin-top: 4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media print {
+  .site-nav, .site-footer { display: none; }
+}

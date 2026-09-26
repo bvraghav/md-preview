@@ -11,6 +11,10 @@ md-preview notes.md
 That renders `notes.md`, opens it in your browser, and re-renders and
 reloads the page every time you save the file. Stop it with `Ctrl-C`.
 
+**Website:** <https://bvraghav.github.io/md-preview/> · **Live demo:**
+[`test-sample.md` as rendered by md-preview](https://bvraghav.github.io/md-preview/demo.html).
+The whole site is built with md-preview itself; see [`site/`](site/Makefile).
+
 ---
 
 ## Contents
@@ -24,6 +28,7 @@ reloads the page every time you save the file. Stop it with `Ctrl-C`.
   - [5. Try the test sample](#5-try-the-test-sample)
   - [6. Emacs integration](#6-emacs-integration)
 - [Everyday use](#everyday-use)
+- [Publishing pages](#publishing-pages)
 - [Troubleshooting](#troubleshooting)
 - [Uninstall](#uninstall)
 
@@ -57,12 +62,14 @@ packages under the same or similar names.
 
 | Tool           | Why                                   | Install (Arch)                  |
 |----------------|---------------------------------------|---------------------------------|
-| `pandoc` ≥ 3.1 | Markdown → HTML, Lua filter           | `sudo pacman -S pandoc-cli`     |
+| `pandoc` ≥ 3.9 | Markdown → HTML, Lua filter           | `sudo pacman -S pandoc-cli`     |
 | `entr`         | re-runs pandoc when the file changes  | `sudo pacman -S entr`           |
 | `browser-sync` | local server + browser live reload    | `npm install -g browser-sync`   |
 | `curl`, `tar`  | `md-preview fetch` only               | usually already installed       |
 
-**pandoc.** Any pandoc 3.x works. On Arch, `pandoc-cli` is linked against
+**pandoc.** Version 3.9 or newer is needed for GitHub-style alerts in
+pandoc Markdown, which md-preview enables by default. With an older 3.x,
+set `MD_PREVIEW_FROM=markdown+tex_math_single_backslash+mark+emoji`. On Arch, `pandoc-cli` is linked against
 about 250 Haskell shared libraries and takes about 1.5 s just to start,
 so each re-render takes several seconds. The statically linked release
 starts in well under a second and makes live preview much snappier:
@@ -140,7 +147,7 @@ md-preview doctor
 ```
 
 ```
-md-preview 0.0.1
+md-preview 0.0.2
 
 pandoc         pandoc 3.10.2
 entr           /usr/bin/entr
@@ -215,6 +222,29 @@ md-preview build --embed notes.md -o /tmp/notes.html   # single self-contained f
 ```
 
 Relative image links resolve against the Markdown file's directory.
+
+## Publishing pages
+
+`build --assets PREFIX` makes a page link to its stylesheet, KaTeX and
+mermaid under the relative URL `PREFIX/`, instead of absolute local paths.
+`md-preview assets DIR` copies those files into place, so the output can
+go on any static web host:
+
+```sh
+md-preview fetch                                  # once, to self-host KaTeX + mermaid
+md-preview build --assets _md-preview notes.md -o public/index.html
+md-preview assets public/_md-preview
+```
+
+The [project website](https://bvraghav.github.io/md-preview/) is built this way: see
+[`site/Makefile`](site/Makefile) and the GitHub Actions workflow in
+[`.github/workflows/site.yml`](.github/workflows/site.yml), which
+rebuilds and deploys it to GitHub Pages on every push to `main`.
+
+```sh
+make -C site          # build into site/_site/
+make -C site serve    # preview at http://localhost:8000
+```
 
 ## Troubleshooting
 

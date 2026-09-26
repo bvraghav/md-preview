@@ -1,0 +1,19 @@
+<nav class="site-nav">
+  <a class="site-brand" href="index.html">md-preview</a>
+  <a href="index.html">Home</a>
+  <a href="demo.html">Demo</a>
+  <a href="reference.html">Reference</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="manifest.html">Manifest</a>
+  <a href="license.html">License</a>
+  <a class="site-ext" href="@REPO_URL@">GitHub</a>
+</nav>
+<script>
+  // Mark the current page; "/" and "/index.html" both count as Home.
+  (function () {
+    var here = location.pathname.replace(/\/$/, '/index.html').split('/').pop();
+    document.querySelectorAll('.site-nav a:not(.site-brand)').forEach(function (a) {
+      if (a.getAttribute('href') === here) a.setAttribute('aria-current', 'page');
+    });
+  })();
+</script>

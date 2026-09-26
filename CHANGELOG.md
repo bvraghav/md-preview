@@ -6,6 +6,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-09-26
+
+### Added
+
+- Project website built by md-preview itself (`site/`), deployed to GitHub
+  Pages by a GitHub Actions workflow (`.github/workflows/site.yml`).
+  README becomes the homepage, `test-sample.md` the live demo, and
+  CHANGELOG, LICENSE, MANIFEST and REFERENCE get lower-case pages.
+- `build --assets PREFIX`: link the stylesheet, KaTeX and mermaid relative
+  to `PREFIX/`, for publishing on a web host.
+- `md-preview assets DIR`: copy the stylesheet and fetched KaTeX/mermaid into
+  the layout that `--assets` pages expect.
+
+### Fixed
+
+- README stated pandoc ≥ 3.1; the default `alerts` extension needs
+  pandoc ≥ 3.9 in pandoc Markdown.
+
 ## [0.0.1] - 2026-09-26
 
 ### Added
@@ -33,5 +51,6 @@ All notable changes to this project are documented here. The format follows
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/bvraghav/md-preview/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/bvraghav/md-preview/releases/tag/v0.0.1

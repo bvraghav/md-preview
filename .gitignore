@@ -7,3 +7,7 @@
 *.elc
 *~
 .#*
+
+# site build
+site/_site/
+site/_build/
