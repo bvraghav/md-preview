@@ -11,7 +11,7 @@ make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
-At 0.2.0 all nine pass: **420 checks**, about 2½ minutes. CI runs fewer:
+At 0.2.0 all nine pass: **418 checks**, about 2½ minutes. CI runs fewer:
 `emacs` and `aur` don't run there, and the zsh and nvm-fallback checks
 don't apply on the runner.
 
