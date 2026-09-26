@@ -77,7 +77,9 @@ md-preview doctor                  # check everything is found
 
 **[INSTALL.md](INSTALL.md)** has the details: requirements and versions
 (including a much faster pandoc build), install locations, `make link` for
-hacking on md-preview, the Emacs package, upgrading and uninstalling.
+hacking on md-preview, upgrading and uninstalling. For Emacs
+(`md-preview-mode`, from MELPA or with the command), see
+**[emacs/INSTALL.md](emacs/INSTALL.md)**.
 
 ## Everyday use
 

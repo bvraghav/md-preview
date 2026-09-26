@@ -10,7 +10,7 @@
 #   CHANGELOG.md    -> changelog.html    LICENSE        -> license.html
 #   MANIFEST.md     -> manifest.html     REFERENCE.md   -> reference.html
 #   TODO.md         -> todo.html         INSTALL.md     -> install.html
-#   CONTRIBUTING.md -> contributing.html
+#   CONTRIBUTING.md -> contributing.html emacs/INSTALL.md -> emacs.html
 #   test-sample.md  -> demo-source.html  (View source: verbatim, round-trip checked)
 #
 # KaTeX and mermaid are fetched once (md-preview fetch) and self-hosted
@@ -74,6 +74,7 @@ $(eval $(call page,reference,REFERENCE.md,md-preview · Reference))
 $(eval $(call page,todo,TODO.md,md-preview · TODO))
 $(eval $(call page,install,INSTALL.md,md-preview · Install))
 $(eval $(call page,contributing,CONTRIBUTING.md,md-preview · Contributing))
+$(eval $(call page,emacs,emacs/INSTALL.md,md-preview · Emacs,-M md-preview-site-srcdir=emacs))
 
 .PHONY: all fetch assets check serve clean
 

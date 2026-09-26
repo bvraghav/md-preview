@@ -163,7 +163,9 @@ section has an **Expect:** note saying what should appear.
 
 `make install` puts `md-preview.el` in `~/.local/share/emacs/site-lisp/`.
 It adds a minor mode that starts one `md-preview` process per buffer and
-stops it when you disable the mode or kill the buffer.
+stops it when you disable the mode or kill the buffer. For MELPA,
+straight.el/Elpaca, all options, and PATH problems in a GUI Emacs, see
+[emacs/INSTALL.md](emacs/INSTALL.md).
 
 ```elisp
 (add-to-list 'load-path "~/.local/share/emacs/site-lisp")

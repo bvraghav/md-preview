@@ -23,7 +23,7 @@ the nvm-fallback check doesn't apply).
 | `browser` | 40 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
 | `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
 | `aur` | 25 | builds the AUR package from a tarball of `HEAD` (checks run inside), checks its contents, and runs md-preview from the unpacked package with nothing fetched: packaged KaTeX and mermaid, `docs` from `/usr/share/doc`, the man page; `.SRCINFO` matches the PKGBUILD | makepkg (Arch; not on CI) |
-| `emacs` | 7 | the Emacs package byte-compiles cleanly; `md-preview-mode` starts, reports its URL and stops cleanly | emacs |
+| `emacs` | 20 | the Emacs package byte-compiles cleanly and passes `checkdoc` and `package-lint` (MELPA's checks) with a full header; a missing `md-preview` command gives a helpful error and leaves the mode off; the URL is parsed from coloured output; `md-preview-mode` starts, reports its URL and stops cleanly | emacs (package-lint is fetched from MELPA) |
 
 A suite whose tools are missing is **skipped, not failed**. GitHub
 Actions runs `build`, `site`, `browser` and `serve` on every push and pull

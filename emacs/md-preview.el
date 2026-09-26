@@ -1,9 +1,16 @@
 ;;; md-preview.el --- Live browser preview of Markdown via md-preview  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2026 B.V. Raghav
+
+;; Author: B.V. Raghav <bvraghav@gmail.com>
+;; Maintainer: B.V. Raghav <bvraghav@gmail.com>
 ;; Version: 0.0.3
 ;; Package-Requires: ((emacs "27.1"))
-;; Keywords: markdown, tools, preview
+;; Keywords: tools, text, hypermedia
 ;; URL: https://github.com/bvraghav/md-preview
+;; SPDX-License-Identifier: MIT
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
@@ -18,6 +25,10 @@
 ;; One md-preview process runs per buffer.  Its output goes to the buffer
 ;; " *md-preview: FILE*" (see `md-preview-show-log').  Killing the buffer or
 ;; disabling the mode stops the process and removes its temporary files.
+;;
+;; This package drives the `md-preview' command, which is installed
+;; separately (Arch: the AUR package `md-preview'; elsewhere, from source).
+;; See https://bvraghav.github.io/md-preview/install.html
 
 ;;; Code:
 
@@ -29,7 +40,7 @@
   :prefix "md-preview-")
 
 (defcustom md-preview-program "md-preview"
-  "The md-preview executable: a name on `exec-path' or an absolute path."
+  "The md-preview executable: a name on the variable `exec-path', or a path."
   :type 'string)
 
 (defcustom md-preview-args nil
@@ -51,10 +62,16 @@ Useful when Emacs does not inherit your shell's PATH, e.g.
 (defvar-local md-preview--process nil
   "The md-preview process serving this buffer, if any.")
 
+(defconst md-preview--install-url
+  "https://bvraghav.github.io/md-preview/install.html"
+  "Where to read how to install the md-preview command.")
+
 (defun md-preview--log-buffer-name (file)
+  "Return the name of the log buffer for the preview of FILE."
   (format " *md-preview: %s*" (abbreviate-file-name file)))
 
 (defun md-preview--sentinel (proc event)
+  "Handle EVENT for md-preview process PROC: turn the mode off when it exits."
   (unless (process-live-p proc)
     (let ((buf (process-get proc 'md-preview-source)))
       (when (buffer-live-p buf)
@@ -76,29 +93,40 @@ Useful when Emacs does not inherit your shell's PATH, e.g.
         (insert text)))
     (unless (process-get proc 'md-preview-url)
       (when (string-match "Local: *\\(http://[^ \t\n]+\\)" text)
-      (let ((url (match-string 1 string)))
+        (let ((url (match-string 1 text)))
           (process-put proc 'md-preview-url url)
           (message "md-preview: serving at %s" url))))))
+
+(defun md-preview--program ()
+  "Return the md-preview executable to run, or signal a helpful error.
+MELPA installs only this package, not the command it drives."
+  (or (and (file-name-absolute-p md-preview-program)
+           (file-executable-p md-preview-program)
+           md-preview-program)
+      (executable-find md-preview-program)
+      (user-error "The `%s' command was not found: install it (see %s), or set `md-preview-program'"
+                  md-preview-program md-preview--install-url)))
 
 ;;;###autoload
 (defun md-preview-start ()
   "Start a live preview of the current buffer's file."
   (interactive)
   (unless buffer-file-name
-    (user-error "md-preview: buffer is not visiting a file"))
+    (user-error "Buffer is not visiting a file"))
   (if (process-live-p md-preview--process)
       (message "md-preview: already running%s"
                (let ((url (process-get md-preview--process 'md-preview-url)))
                  (if url (concat " at " url) "")))
     (when (and md-preview-save-before-start (buffer-modified-p))
       (save-buffer))
-    (let* ((file (expand-file-name buffer-file-name))
+    (let* ((program (md-preview--program))
+           (file (expand-file-name buffer-file-name))
            (process-environment (append md-preview-environment process-environment))
            (log (get-buffer-create (md-preview--log-buffer-name file)))
            (proc (make-process
                   :name "md-preview"
                   :buffer log
-                  :command `(,md-preview-program "serve" ,@md-preview-args ,file)
+                  :command `(,program "serve" ,@md-preview-args ,file)
                   :connection-type 'pipe
                   :noquery t
                   :filter #'md-preview--filter
@@ -129,7 +157,7 @@ Useful when Emacs does not inherit your shell's PATH, e.g.
   "Show the md-preview process output for the current buffer."
   (interactive)
   (unless buffer-file-name
-    (user-error "md-preview: buffer is not visiting a file"))
+    (user-error "Buffer is not visiting a file"))
   (let ((buf (get-buffer (md-preview--log-buffer-name
                           (expand-file-name buffer-file-name)))))
     (if buf (display-buffer buf) (message "md-preview: no log yet"))))
@@ -139,7 +167,7 @@ Useful when Emacs does not inherit your shell's PATH, e.g.
   (interactive)
   (let ((url (and md-preview--process
                   (process-get md-preview--process 'md-preview-url))))
-    (if url (browse-url url) (user-error "md-preview: no preview running"))))
+    (if url (browse-url url) (user-error "No md-preview running for this buffer"))))
 
 ;;;###autoload
 (define-minor-mode md-preview-mode

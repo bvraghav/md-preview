@@ -27,7 +27,8 @@ Every file in the repository and what it does.
 | `share/md-preview/filter.lua`      | Pandoc Lua filter: `mermaid` and `math` fences, frontmatter table, fallback page title, when to show the TOC |
 | `share/md-preview/style.css`       | GitHub-like light/dark stylesheet |
 | `share/md-preview/md-preview.js`   | Page enhancements: heading anchors, copy buttons, TOC state and current-section highlight |
-| `emacs/md-preview.el`              | Emacs package: `md-preview-mode` and commands |
+| `emacs/md-preview.el`              | Emacs package: `md-preview-mode` and commands (MELPA-ready) |
+| `emacs/INSTALL.md`                 | Emacs setup: MELPA, AUR, straight/Elpaca, options, PATH problems, testing an unreleased version |
 | `man/md-preview.1.md`              | Man page source; `make man` builds `man/md-preview.1` with pandoc |
 | `completions/md-preview.bash`      | bash completion: commands, per-command options, Markdown files |
 | `completions/_md-preview`          | zsh completion, the same with descriptions |
@@ -39,6 +40,8 @@ Every file in the repository and what it does.
 | `packaging/aur/PKGBUILD`      | Arch package: md-preview under `/usr`, with KaTeX, mermaid, the docs, man page, completion and Emacs package |
 | `packaging/aur/.SRCINFO`      | Generated from the PKGBUILD (`makepkg --printsrcinfo`), required by the AUR |
 | `packaging/aur/README.md`     | What the package contains, how to test it, how to publish a new version |
+| `packaging/melpa/md-preview`  | MELPA recipe |
+| `packaging/melpa/README.md`   | How to submit the recipe to MELPA |
 
 ## Website
 
@@ -46,7 +49,7 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 
 | File                            | Purpose |
 |---------------------------------|---------|
-| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO, INSTALL, CONTRIBUTING → lower-case `.html`, test-sample source → `demo-source.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
+| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO, INSTALL, CONTRIBUTING → lower-case `.html`, emacs/INSTALL → `emacs.html`, test-sample source → `demo-source.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
 | `site/links.lua`                | Pandoc filter: rewrites links between repo files to site pages, and other relative links to GitHub |
 | `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted) with a "More" dropdown for secondary pages; marks the current page |
 | `site/site.css`                 | Site-only styles (nav, "View source" link, footer), layered on `style.css` |

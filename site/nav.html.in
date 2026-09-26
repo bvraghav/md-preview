@@ -9,6 +9,7 @@
   <details class="site-more">
     <summary>More</summary>
     <div class="site-menu">
+      <a href="emacs.html">Emacs</a>
       <a href="manifest.html">Manifest</a>
       <a href="license.html">License</a>
       <a href="todo.html">TODO</a>
