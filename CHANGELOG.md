@@ -37,7 +37,9 @@ on every page and links between the files that just work.
 - `MD_PREVIEW_STATE` moves a folder build's state (default
   `OUT/.md-preview`) elsewhere, e.g. to keep it out of a published site.
 - The project website is now built with folder mode: its pages are listed
-  once, in `site/pages.yaml`, and it rebuilds incrementally.
+  once, in `site/pages.yaml`, and it rebuilds incrementally. It also
+  publishes a folder demo, and a `sitemap.xml` for search engines (every
+  page, with the date of its source's last commit).
 
 ### Changed
 

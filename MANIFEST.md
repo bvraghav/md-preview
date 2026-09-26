@@ -50,6 +50,7 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 | File                            | Purpose |
 |---------------------------------|---------|
 | `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO, INSTALL, CONTRIBUTING → lower-case `.html`, emacs/INSTALL → `emacs.html`, test-sample source → `demo-source.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
+| `site/sitemap.sh`               | Writes `sitemap.xml`: every page's absolute URL, with its source's last-commit date |
 | `site/pages.yaml`               | The site's pages: source file, page name, title, TOC and extras; read by the Makefile and `links.lua` |
 | `site/links.lua`                | Site filter (runs before md-preview's): maps links between repo files to pages (others to GitHub), sets titles, adds footers and the "View source" link |
 | `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted) with a "More" dropdown for secondary pages; marks the current page |

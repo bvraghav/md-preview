@@ -11,7 +11,8 @@
 # repository files to pages and adds titles, footers and the "View source"
 # link. KaTeX and mermaid are fetched once and self-hosted under
 # _site/_md-preview/. _site/folder-demo/ is tests/folder-sample built as it
-# is, to show folder mode.
+# is, to show folder mode. sitemap.xml lists every page for search engines,
+# with absolute URLs under SITE_URL.
 
 ROOT     := ..
 OUT      := _site
@@ -23,6 +24,7 @@ ABSROOT  := $(abspath $(ROOT))
 
 VERSION  := $(shell cat $(ROOT)/VERSION)
 REPO_URL ?= https://github.com/bvraghav/md-preview
+SITE_URL ?= https://bvraghav.github.io/md-preview/
 # The commit the site is built from. Only if $(ROOT) is itself the top of a
 # git checkout: a release tarball unpacked inside another repository (as AUR
 # builds are) must not pick up that repository's commit. Otherwise the tag.
@@ -47,6 +49,7 @@ all: stage $(BUILD)/nav.html | fetch
 	cp site.css $(OUT)/$(ASSETS)/site.css
 	@# Folder mode, as md-preview renders a folder: tests/folder-sample.
 	MD_PREVIEW_STATE=$(abspath $(BUILD))/folder-demo-state $(MDP) build $(ROOT)/tests/folder-sample -o $(OUT)/folder-demo
+	sh sitemap.sh $(SITE_URL) $(ROOT) pages.yaml $(BUILD)/folder-demo-state/tree > $(OUT)/sitemap.xml
 	@echo "site built in $(OUT)/ ($(SHORT))"
 
 # Rebuilt every time; cheap. Symlinks keep each source's own mtime, so the

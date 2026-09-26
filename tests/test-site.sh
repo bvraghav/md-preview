@@ -55,6 +55,27 @@ check "  and its own assets"             test -f "$OUT/folder-demo/_md-preview/s
 refute "  without build state"           test -e "$OUT/folder-demo/.md-preview"
 check "  linked from the nav"            grep -q 'href="folder-demo/index.html"' "$OUT/index.html"
 
+echo "== sitemap.xml"
+SM=$OUT/sitemap.xml
+check "exists"                           test -s "$SM"
+check "is well-formed XML"               python3 -c "import sys, xml.etree.ElementTree as E; E.parse(sys.argv[1])" "$SM"
+locs=$(python3 -c "import sys, xml.etree.ElementTree as E
+ns={'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+for u in E.parse(sys.argv[1]).getroot().findall('s:url', ns): print(u.find('s:loc', ns).text, u.find('s:lastmod', ns).text)" "$SM")
+eq "one URL per site page, plus the folder demo's" "$(( $(echo $pages | wc -w) + 7 ))" "$(wc -l <<<"$locs")"
+refute "every URL absolute, under the site" grep -v '^https://bvraghav.github.io/md-preview/' <<<"$locs"
+refute "every lastmod a date"            grep -vE ' [0-9]{4}-[0-9]{2}-[0-9]{2}$' <<<"$locs"
+check "the home page is the site root"   grep -q '^https://bvraghav.github.io/md-preview/ ' <<<"$locs"
+check "spaces encoded"                   grep -q 'folder-demo/notes/My%20Notes.html ' <<<"$locs"
+# each listed page exists in the build
+missing=0
+while read -r loc _; do
+  path=${loc#https://bvraghav.github.io/md-preview/}; path=${path//%20/ }
+  [[ -z $path ]] && path=index.html
+  [[ -f $OUT/$path ]] || { missing=$((missing + 1)); note "missing: $path"; }
+done <<<"$locs"
+eq "every listed page exists"            0 "$missing"
+
 echo "== install-docs"
 D=$WORK/site-destdir; rm -rf "$D"
 check "make install-docs DESTDIR"        make -s install-docs DESTDIR="$D" PREFIX=/usr
