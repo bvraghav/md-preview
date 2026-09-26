@@ -6,7 +6,8 @@ Every file in the repository and what it does.
 
 | File            | Purpose |
 |-----------------|---------|
-| `README.md`     | Usage summary and detailed setup instructions |
+| `README.md`     | What md-preview does, a quick start, everyday use |
+| `INSTALL.md`    | Installation from source: requirements, `make install`, fetch, doctor, Emacs, upgrading, uninstalling |
 | `REFERENCE.md`  | Complete reference: CLI, environment, dialect, math, diagrams, template, filter, Emacs API |
 | `MANIFEST.md`   | This file |
 | `CHANGELOG.md`  | Release history (Keep a Changelog format) |
@@ -34,7 +35,7 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 
 | File                            | Purpose |
 |---------------------------------|---------|
-| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO → lower-case `.html`, test-sample source → `demo-source.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
+| `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO, INSTALL, CONTRIBUTING → lower-case `.html`, test-sample source → `demo-source.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
 | `site/links.lua`                | Pandoc filter: rewrites links between repo files to site pages, and other relative links to GitHub |
 | `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted) with a "More" dropdown for secondary pages; marks the current page |
 | `site/site.css`                 | Site-only styles (nav, "View source" link, footer), layered on `style.css` |

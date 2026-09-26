@@ -13,6 +13,9 @@ All notable changes to this project are documented here. The format follows
   runs it with the tag, along with the full tests on the tagged commit.
   Tags no longer deploy the site.
 - `CONTRIBUTING.md` with the release checklist.
+- `INSTALL.md`: installation from source in one place; README's Setup is
+  now a short quick start pointing to it. Both are on the site, with
+  "Install" in the main navigation.
 
 ### Fixed
 

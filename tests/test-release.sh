@@ -14,7 +14,7 @@ check "VERSION is X.Y.Z"                     grep -qxE '[0-9]+\.[0-9]+\.[0-9]+' 
 eq "md-preview version"                      "md-preview $V" "$("$MDP" version)"
 eq "md-preview.el ;; Version: header"        "$V" "$(sed -n 's/^;; Version: //p' emacs/md-preview.el)"
 check "REFERENCE.md names this version"      grep -q "^Complete interface for md-preview $V\." REFERENCE.md
-check "README doctor example"                grep -qx "md-preview $V" README.md
+check "INSTALL.md doctor example"            grep -qx "md-preview $V" INSTALL.md
 check "MANIFEST.md VERSION row"              grep -q "(\`$V\`)" MANIFEST.md
 
 echo "== CHANGELOG"

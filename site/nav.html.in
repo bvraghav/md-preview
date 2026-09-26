@@ -1,6 +1,7 @@
 <nav class="site-nav" aria-label="Site">
   <a class="site-brand" href="index.html">md-preview</a>
   <a href="index.html">Home</a>
+  <a href="install.html">Install</a>
   <a href="demo.html">Demo</a>
   <a href="reference.html">Reference</a>
   <a href="changelog.html">Changelog</a>
@@ -11,6 +12,7 @@
       <a href="manifest.html">Manifest</a>
       <a href="license.html">License</a>
       <a href="todo.html">TODO</a>
+      <a href="contributing.html">Contributing</a>
     </div>
   </details>
   <a class="site-ext" href="@REPO_URL@">GitHub</a>
