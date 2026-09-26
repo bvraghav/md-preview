@@ -1,6 +1,8 @@
 # Build the project website with md-preview itself, run the regression
 # tests (tests/), and publish the site to GitHub Pages. Pull requests build
-# and test only; pushes to main also deploy.
+# and test only; pushes to main also deploy. Pushing a vX.Y.Z tag runs the
+# same tests on the tagged commit, plus the release checks with TAG set, so
+# a bad tag shows up red; tags don't deploy.
 #
 # One-time setup: Settings → Pages → Build and deployment → Source:
 # "GitHub Actions".
@@ -10,6 +12,7 @@ name: site
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -53,16 +56,19 @@ jobs:
         run: make -C site
 
       - name: Regression tests
-        run: make -k -C tests ci MD_PREVIEW_DATA="$HOME/.local/share/md-preview" CHROME=google-chrome
+        run: |
+          tag=''
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then tag=$GITHUB_REF_NAME; fi
+          make -k -C tests ci TAG="$tag" MD_PREVIEW_DATA="$HOME/.local/share/md-preview" CHROME=google-chrome
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
           path: site/_site
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:

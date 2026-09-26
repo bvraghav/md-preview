@@ -7,7 +7,9 @@
 #   make serve        live preview end to end                 (entr, browser-sync)
 #   make browser      the site in headless Chromium           (chromium or Chrome)
 #   make emacs        the Emacs package                       (emacs)
-#   make ci           build site browser serve: what GitHub Actions runs
+#   make release      version strings and CHANGELOG agree; with
+#                     TAG=vX.Y.Z also the tag                 (nothing)
+#   make ci           release build site browser serve: what GitHub Actions runs
 #   make clean        remove _work/
 #
 # A suite whose tools are missing is skipped, not failed. Add -k to keep
@@ -15,7 +17,7 @@
 # are fetched once into $(MD_PREVIEW_DATA) (default _work/data). Point
 # MD_PREVIEW_DATA at an existing data directory to reuse its downloads.
 
-SUITES := build site serve browser emacs
+SUITES := release build site serve browser emacs
 MDP    := ../bin/md-preview
 
 MD_PREVIEW_DATA ?= $(CURDIR)/_work/data
@@ -25,11 +27,14 @@ export MD_PREVIEW_DATA
 
 all: $(SUITES)
 
-ci: build site browser serve
+ci: release build site browser serve
 
 # Idempotent; only downloads what is missing.
 vendor:
 	@$(MDP) fetch
+
+release:
+	@bash test-release.sh
 
 build: vendor
 	@bash test-build.sh

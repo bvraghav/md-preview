@@ -12,6 +12,7 @@ Every file in the repository and what it does.
 | `CHANGELOG.md`  | Release history (Keep a Changelog format) |
 | `VERSION`       | Current version, read by the script at runtime (`0.0.3`) |
 | `LICENSE`       | MIT license |
+| `CONTRIBUTING.md` | Working on md-preview, and the release checklist |
 | `TODO.md`       | Roadmap: the intent and the agreed plan for upcoming releases |
 | `Makefile`      | `install`, `link`, `uninstall`, `test`, `check`, `clean` |
 | `.gitignore`    | Ignores rendered HTML, check artefacts, the site build and test scratch space |
@@ -39,7 +40,7 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 | `site/site.css`                 | Site-only styles (nav, "View source" link, footer), layered on `style.css` |
 | `site/source-page.sh`           | Wraps a file verbatim in a fence nothing inside can close; builds the demo's View source page |
 | `site/roundtrip.py`             | Extracts the code from a rendered source page and checks it matches the original byte for byte |
-| `.github/workflows/site.yml`    | GitHub Actions: build the site, run the regression suites, deploy to Pages on push to `main` (PRs build and test only) |
+| `.github/workflows/site.yml`    | GitHub Actions: build the site, run the regression suites, deploy to Pages on push to `main` (PRs build and test only); on a `vX.Y.Z` tag push, also the release checks, and no deploy |
 
 ## Test material
 
@@ -55,13 +56,14 @@ Regression suites; see the Testing section of the README.
 | File                     | Purpose |
 |--------------------------|---------|
 | `tests/README.md`        | How to run the suites, what each covers, bugs they found, how the harness works |
-| `tests/Makefile`         | Runs the suites: `build`, `site`, `serve`, `browser`, `emacs`; `ci` is the set GitHub Actions runs |
+| `tests/Makefile`         | Runs the suites: `release`, `build`, `site`, `serve`, `browser`, `emacs`; `ci` is the set GitHub Actions runs |
 | `tests/lib.sh`           | Assertion helpers (`check`, `refute`, `eq`, `ge`, `wait_for`, `skip`, …) shared by the suites |
 | `tests/test-build.sh`    | Rendering, output modes, option precedence, CLI, `assets`, install, View Source round trip |
 | `tests/test-site.sh`     | Website: pages, link rewriting, per-page features, HTTP |
 | `tests/test-serve.sh`    | Live preview end to end, including saves, errors, reloads and cleanup |
 | `tests/test-browser.sh`  | Headless Chromium runner: injects a probe into a page and checks what it reports |
 | `tests/probes/*.js`      | Browser probes: `render` (math, diagrams, enhancements), `toc`, `dropdown`, `source` (line numbers) |
+| `tests/test-release.sh`  | Version strings and CHANGELOG agree with `VERSION`; with `TAG`, the tag too |
 | `tests/test-emacs.sh`    | Emacs package: byte-compile, and `md-preview-mode` in batch Emacs |
 
 ## Not in the repository

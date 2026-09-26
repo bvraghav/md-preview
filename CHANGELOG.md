@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Release checks: a `release` test suite verifies that every copy of the
+  version agrees and the CHANGELOG is ready; on a `vX.Y.Z` tag push CI
+  runs it with the tag, along with the full tests on the tagged commit.
+  Tags no longer deploy the site.
+- `CONTRIBUTING.md` with the release checklist.
+
 ### Fixed
 
 - Tests: two checks depended on the machine, and failed CI for the

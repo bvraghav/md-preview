@@ -6,7 +6,8 @@ Five suites with a Makefile. From the repository root:
 make test                   # all suites (same as: make -C tests)
 make -C tests build         # one suite
 make -k -C tests            # keep going after a failing suite
-make -C tests ci            # build site browser serve: what CI runs
+make -C tests ci            # release build site browser serve: what CI runs
+make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
@@ -19,6 +20,7 @@ the nvm-fallback check doesn't apply).
 | `site` | 55 | the website: page set, link rewriting, frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
 | `serve` | 27 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
 | `browser` | 40 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
+| `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
 | `emacs` | 7 | the Emacs package byte-compiles cleanly; `md-preview-mode` starts, reports its URL and stops cleanly | emacs |
 
 A suite whose tools are missing is **skipped, not failed**. GitHub
