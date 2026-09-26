@@ -108,7 +108,13 @@ nvm_sh=''
 for f in "${NVM_DIR:-/nonexistent}/nvm.sh" "${XDG_CONFIG_HOME:-$HOME/.config}/nvm/nvm.sh" "$HOME/.nvm/nvm.sh"; do
   [[ -r $f ]] && { nvm_sh=$f; break; }
 done
-if [[ -n $nvm_sh ]] && ! PATH=/usr/bin:/bin command -v browser-sync >/dev/null; then
+# Only meaningful when browser-sync is installed through nvm (on CI it
+# comes from `sudo npm -g` into /usr/local/bin, and nvm has none).
+nvm_bs=''
+if [[ -n $nvm_sh ]]; then
+  nvm_bs=$(ls "$(dirname "$nvm_sh")"/versions/node/*/bin/browser-sync 2>/dev/null | head -1)
+fi
+if [[ -n $nvm_bs ]] && ! PATH=/usr/bin:/bin command -v browser-sync >/dev/null; then
   check "starts with node/browser-sync off PATH" start PATH=/usr/bin:/bin
   stop
 else
