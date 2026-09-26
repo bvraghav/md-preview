@@ -129,6 +129,9 @@ check "make install DESTDIR"          make -s install DESTDIR="$D" PREFIX=/usr
 check "  script in /usr/bin"          test -x "$D/usr/bin/md-preview"
 check "  support files"               test -f "$D/usr/share/md-preview/md-preview.js"
 check "  Emacs package"               test -f "$D/usr/share/emacs/site-lisp/md-preview.el"
+check "  man page"                    test -f "$D/usr/share/man/man1/md-preview.1"
+check "  bash completion"             test -f "$D/usr/share/bash-completion/completions/md-preview"
+check "  zsh completion"              test -f "$D/usr/share/zsh/site-functions/_md-preview"
 if [[ -d $MD_PREVIEW_DATA/vendor ]]; then
   check "make install-vendor"         make -s install-vendor DESTDIR="$D" PREFIX=/usr VENDOR_SRC="$MD_PREVIEW_DATA/vendor"
   check "  KaTeX and mermaid copied"  test -f "$D/usr/share/md-preview/vendor/katex/katex.min.js" -a -f "$D/usr/share/md-preview/vendor/mermaid/mermaid.min.js"
@@ -136,6 +139,7 @@ fi
 refute "install-vendor without a source fails" make -s install-vendor DESTDIR="$D" PREFIX=/usr VENDOR_SRC="$W/none"
 check "make uninstall DESTDIR"        make -s uninstall DESTDIR="$D" PREFIX=/usr
 refute "  nothing left in /usr/bin"   test -e "$D/usr/bin/md-preview"
+check "  nothing left at all"        bash -c "[ -z \"\$(find '$D' -type f)\" ]"
 
 echo "== docs without documentation"
 P=$W/prefix-nodocs; make -s install PREFIX="$P" >/dev/null

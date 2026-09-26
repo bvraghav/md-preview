@@ -7,6 +7,7 @@
 #   make serve        live preview end to end                 (entr, browser-sync)
 #   make browser      the site in headless Chromium           (chromium or Chrome)
 #   make emacs        the Emacs package                       (emacs)
+#   make completions  bash and zsh completion, man page       (zsh, pandoc)
 #   make release      version strings and CHANGELOG agree; with
 #                     TAG=vX.Y.Z also the tag                 (nothing)
 #   make ci           release build site browser serve: what GitHub Actions runs
@@ -17,7 +18,7 @@
 # are fetched once into $(MD_PREVIEW_DATA) (default _work/data). Point
 # MD_PREVIEW_DATA at an existing data directory to reuse its downloads.
 
-SUITES := release build site serve browser emacs
+SUITES := release build completions site serve browser emacs
 MDP    := ../bin/md-preview
 
 MD_PREVIEW_DATA ?= $(CURDIR)/_work/data
@@ -27,7 +28,7 @@ export MD_PREVIEW_DATA
 
 all: $(SUITES)
 
-ci: release build site browser serve
+ci: release build completions site browser serve
 
 # Idempotent; only downloads what is missing.
 vendor:
@@ -38,6 +39,9 @@ release:
 
 build: vendor
 	@bash test-build.sh
+
+completions:
+	@bash test-completions.sh
 
 site: vendor
 	@bash test-site.sh

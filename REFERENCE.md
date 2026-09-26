@@ -162,6 +162,9 @@ $PREFIX/share/md-preview/md-preview.js    page enhancements (anchors, copy, TOC)
 $PREFIX/share/md-preview/VERSION          version string
 $PREFIX/share/md-preview/vendor/          packaged KaTeX + mermaid (make install-vendor)
 $PREFIX/share/emacs/site-lisp/md-preview.el
+$PREFIX/share/man/man1/md-preview.1       man page
+$PREFIX/share/bash-completion/completions/md-preview
+$PREFIX/share/zsh/site-functions/_md-preview
 $PREFIX/share/doc/md-preview/html/        the website, for `docs` (make install-docs)
 
 $MD_PREVIEW_DATA/vendor/katex/            KaTeX dist (katex.min.js, fonts/, contrib/…)

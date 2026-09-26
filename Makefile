@@ -3,6 +3,7 @@
 #   make install            copy into $(PREFIX)  (default ~/.local)
 #   make install-docs       build the website and install it for `md-preview docs`
 #   make install-vendor     install KaTeX + mermaid from VENDOR_SRC (for packagers)
+#   make man                build the man page (man/md-preview.1) with pandoc
 #   make link               symlink bin/md-preview into $(PREFIX)/bin (for hacking)
 #   make uninstall          remove what the install targets and link created
 #
@@ -16,6 +17,13 @@ BINDIR   ?= $(PREFIX)/bin
 SHAREDIR ?= $(PREFIX)/share/md-preview
 LISPDIR  ?= $(PREFIX)/share/emacs/site-lisp
 DOCDIR   ?= $(PREFIX)/share/doc/md-preview
+MANDIR   ?= $(PREFIX)/share/man
+BASHCOMPDIR ?= $(PREFIX)/share/bash-completion/completions
+ZSHCOMPDIR  ?= $(PREFIX)/share/zsh/site-functions
+
+VERSION := $(shell cat VERSION)
+# Man page date: the date of this VERSION's CHANGELOG section, if released.
+MANDATE := $(shell sed -n 's/^## \[$(VERSION)\] - //p' CHANGELOG.md)
 
 # install-vendor copies this (a fetched vendor directory, by default).
 VENDOR_SRC ?= $(or $(MD_PREVIEW_DATA),$(HOME)/.local/share/md-preview)/vendor
@@ -27,12 +35,20 @@ SHARE_FILES := share/md-preview/template.html \
 
 CHECK_OUT := test-sample.html
 
-.PHONY: install install-docs install-vendor link uninstall test check clean
+.PHONY: install install-docs install-vendor man link uninstall test check clean
 
-install:
+man: man/md-preview.1
+
+man/md-preview.1: man/md-preview.1.md VERSION CHANGELOG.md
+	pandoc -s -t man -M footer="md-preview $(VERSION)" $(if $(MANDATE),-M date="$(MANDATE)") $< -o $@
+
+install: man/md-preview.1
 	install -Dm755 bin/md-preview $(DESTDIR)$(BINDIR)/md-preview
 	install -Dm644 -t $(DESTDIR)$(SHAREDIR) $(SHARE_FILES) VERSION
 	install -Dm644 emacs/md-preview.el $(DESTDIR)$(LISPDIR)/md-preview.el
+	install -Dm644 man/md-preview.1 $(DESTDIR)$(MANDIR)/man1/md-preview.1
+	install -Dm644 completions/md-preview.bash $(DESTDIR)$(BASHCOMPDIR)/md-preview
+	install -Dm644 completions/_md-preview $(DESTDIR)$(ZSHCOMPDIR)/_md-preview
 	@echo "installed; run 'md-preview doctor' and 'md-preview fetch'"
 
 # The website needs KaTeX and mermaid to build, so the site Makefile fetches
@@ -58,6 +74,8 @@ link:
 
 uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/md-preview $(DESTDIR)$(LISPDIR)/md-preview.el
+	rm -f $(DESTDIR)$(MANDIR)/man1/md-preview.1
+	rm -f $(DESTDIR)$(BASHCOMPDIR)/md-preview $(DESTDIR)$(ZSHCOMPDIR)/_md-preview
 	rm -rf $(DESTDIR)$(SHAREDIR) $(DESTDIR)$(DOCDIR)
 
 test:
@@ -82,4 +100,4 @@ check:
 	@echo "check passed: $(CHECK_OUT)"
 
 clean:
-	rm -f $(CHECK_OUT) .check.log .check-source.md .check-source.html
+	rm -f $(CHECK_OUT) .check.log .check-source.md .check-source.html man/md-preview.1

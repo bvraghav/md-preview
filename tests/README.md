@@ -17,6 +17,7 @@ the nvm-fallback check doesn't apply).
 | Suite | Checks | Covers | Needs |
 |---|---|---|---|
 | `build` | 58 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
+| `completions` | 40 | bash completion called directly; zsh completion in a real interactive zsh (driven through `zsh/zpty` by `zcomp.zsh`); the man page builds and has every section | zsh, pandoc, man |
 | `site` | 55 | the website: page set, link rewriting, frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
 | `serve` | 27 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
 | `browser` | 40 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |

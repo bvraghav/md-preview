@@ -1,0 +1,59 @@
+#compdef md-preview
+# zsh completion for md-preview. Installed to share/zsh/site-functions;
+# that directory must be on $fpath before compinit.
+
+local -a commands serve_opts build_opts docs_opts
+commands=(
+  'serve:live preview in the browser (the default)'
+  'build:render once to HTML'
+  'fetch:download KaTeX and mermaid for offline use'
+  'assets:copy stylesheet, KaTeX and mermaid into a directory'
+  'docs:serve the documentation at http://localhost:6996'
+  'doctor:check dependencies and assets'
+  'help:show usage'
+  'version:show the version'
+)
+serve_opts=(
+  '(-p --port)'{-p,--port}'[port for browser-sync]:port: '
+  '(-b --browser)'{-b,--browser}'[browser to open]:browser:(firefox chromium google-chrome)'
+  '--no-open[do not open a browser]'
+  '--listen[address to bind]:address:(localhost 0.0.0.0)'
+)
+build_opts=(
+  '(-o --output)'{-o,--output}'[output file]:output file:_files'
+  '(--assets)--embed[self-contained HTML]'
+  '(--embed)--assets[link assets relative to a prefix]:prefix:_directories'
+)
+docs_opts=(
+  '(-p --port)'{-p,--port}'[port]:port: '
+  '(-b --browser)'{-b,--browser}'[browser to open]:browser:(firefox chromium google-chrome)'
+  '--no-open[do not open a browser]'
+)
+local markdown='*:Markdown file:_files -g "*.(md|markdown)(-.)"'
+
+local curcontext=$curcontext state line ret=1
+_arguments -C '1: :->first' '*:: :->rest' && ret=0
+
+case $state in
+  first)
+    if [[ $PREFIX == -* ]]; then
+      _arguments $serve_opts && ret=0
+    else
+      _describe -t commands 'md-preview command' commands && ret=0
+      _files -g '*.(md|markdown)(-.)' && ret=0
+    fi
+    ;;
+  rest)
+    case $words[1] in
+      serve)               _arguments $serve_opts $markdown && ret=0 ;;
+      build)               _arguments $build_opts $markdown && ret=0 ;;
+      fetch)               _arguments '--force[download again]' && ret=0 ;;
+      assets)              _arguments '1:directory:_directories' && ret=0 ;;
+      docs)                _arguments $docs_opts && ret=0 ;;
+      doctor|help|version) ret=0 ;;
+      *)                   _arguments $serve_opts $markdown && ret=0 ;;  # serve is the default
+    esac
+    ;;
+esac
+
+return ret

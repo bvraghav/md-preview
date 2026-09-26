@@ -28,6 +28,9 @@ Every file in the repository and what it does.
 | `share/md-preview/style.css`       | GitHub-like light/dark stylesheet |
 | `share/md-preview/md-preview.js`   | Page enhancements: heading anchors, copy buttons, TOC state and current-section highlight |
 | `emacs/md-preview.el`              | Emacs package: `md-preview-mode` and commands |
+| `man/md-preview.1.md`              | Man page source; `make man` builds `man/md-preview.1` with pandoc |
+| `completions/md-preview.bash`      | bash completion: commands, per-command options, Markdown files |
+| `completions/_md-preview`          | zsh completion, the same with descriptions |
 
 ## Website
 
@@ -57,7 +60,7 @@ Regression suites; see the Testing section of the README.
 | File                     | Purpose |
 |--------------------------|---------|
 | `tests/README.md`        | How to run the suites, what each covers, bugs they found, how the harness works |
-| `tests/Makefile`         | Runs the suites: `release`, `build`, `site`, `serve`, `browser`, `emacs`; `ci` is the set GitHub Actions runs |
+| `tests/Makefile`         | Runs the suites: `release`, `build`, `completions`, `site`, `serve`, `browser`, `emacs`; `ci` is the set GitHub Actions runs |
 | `tests/lib.sh`           | Assertion helpers (`check`, `refute`, `eq`, `ge`, `wait_for`, `skip`, …) shared by the suites |
 | `tests/test-build.sh`    | Rendering, output modes, option precedence, CLI, `assets`, install, View Source round trip |
 | `tests/test-site.sh`     | Website: pages, link rewriting, per-page features, HTTP |
@@ -65,6 +68,8 @@ Regression suites; see the Testing section of the README.
 | `tests/test-browser.sh`  | Headless Chromium runner: injects a probe into a page and checks what it reports |
 | `tests/probes/*.js`      | Browser probes: `render` (math, diagrams, enhancements), `toc`, `dropdown`, `source` (line numbers) |
 | `tests/test-release.sh`  | Version strings and CHANGELOG agree with `VERSION`; with `TAG`, the tag too |
+| `tests/test-completions.sh` | bash completion (direct), zsh completion (in a real interactive zsh), the man page |
+| `tests/zcomp.zsh`        | Harness: drives an interactive zsh through `zsh/zpty` and prints what Tab offers |
 | `tests/test-emacs.sh`    | Emacs package: byte-compile, and `md-preview-mode` in batch Emacs |
 
 ## Not in the repository
@@ -74,5 +79,6 @@ Regression suites; see the Testing section of the README.
 | `~/.local/share/md-preview/vendor/`           | `md-preview fetch` (KaTeX, mermaid) |
 | `$XDG_RUNTIME_DIR/md-preview.XXXXXX/`         | `md-preview serve`, removed on exit |
 | `test-sample.html`                            | `make check` |
+| `man/md-preview.1`                            | `make man`, `make install` |
 | `site/_site/`, `site/_build/`                 | `make -C site` |
 | `tests/_work/`                                | `make -C tests` |

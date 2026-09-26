@@ -22,7 +22,7 @@ package names.
 | `pandoc` ≥ 3.9 | Markdown → HTML, Lua filter           | `sudo pacman -S pandoc-cli`     |
 | `entr`         | re-runs pandoc when the file changes  | `sudo pacman -S entr`           |
 | `browser-sync` | local server + browser live reload    | `npm install -g browser-sync`   |
-| `make`         | installing                            | `sudo pacman -S make`           |
+| `make`         | installing (pandoc builds the man page) | `sudo pacman -S make`         |
 | `curl`, `tar`  | `md-preview fetch` only               | usually already installed       |
 
 **pandoc.** Version 3.9 or newer is needed for GitHub-style alerts in
@@ -70,6 +70,21 @@ That installs into `~/.local` (make sure `~/.local/bin` is on your `PATH`):
 | `~/.local/bin/md-preview`                     | the command |
 | `~/.local/share/md-preview/`                  | template, Lua filter, stylesheet, script, `VERSION` |
 | `~/.local/share/emacs/site-lisp/md-preview.el` | the Emacs package |
+| `~/.local/share/man/man1/md-preview.1`         | the man page (`man md-preview`) |
+| `~/.local/share/bash-completion/completions/md-preview` | bash completion |
+| `~/.local/share/zsh/site-functions/_md-preview` | zsh completion |
+
+bash-completion picks up its file from `~/.local` by itself, and `man`
+finds the page when `~/.local/bin` is on your `PATH`. zsh needs the
+directory on its `fpath`, before `compinit`, in `~/.zshrc`:
+
+```zsh
+fpath=(~/.local/share/zsh/site-functions $fpath)
+autoload -Uz compinit && compinit
+```
+
+With `PREFIX=/usr/local` or a package, all three are found without any
+setup.
 
 Variations:
 
