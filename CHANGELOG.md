@@ -6,22 +6,6 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Fixed
-
-- `serve` showed the folder's own `index.html` instead of the preview when
-  the Markdown file sat next to one: browser-sync tries `--serveStatic`
-  directories before its server root. The preview and the Markdown file's
-  folder are now two base directories, the preview first.
-
-- A link to a section (`page.html#heading`) landed in the wrong place on
-  pages with diagrams: mermaid drew them after the browser had scrolled,
-  pushing the heading out of view. md-preview now scrolls to the fragment
-  again once the diagrams are drawn, and updates the TOC highlight.
-- Tests: the TOC-highlight check scrolled before mermaid had drawn the
-  diagrams, and failed on the slower CI runner. It now opens a deep link,
-  as a user would; headless Chromium delivers no scroll events, so scrolling
-  itself can't be tested there.
-
 ## [0.1.0] - 2026-09-26
 
 md-preview is now installable by others: an AUR package, a MELPA-ready
@@ -68,6 +52,18 @@ For packagers and maintainers:
 
 ### Fixed
 
+- `serve` showed the folder's own `index.html` instead of the preview when
+  the Markdown file sat next to one: browser-sync tries `--serveStatic`
+  directories before its server root. The preview and the Markdown file's
+  folder are now two base directories, the preview first.
+- A link to a section (`page.html#heading`) landed in the wrong place on
+  pages with diagrams: mermaid drew them after the browser had scrolled,
+  pushing the heading out of view. md-preview now scrolls to the fragment
+  again once the diagrams are drawn, and updates the TOC highlight.
+- Tests: the TOC-highlight check scrolled before mermaid had drawn the
+  diagrams, and failed on the slower CI runner. It now opens a deep link,
+  as a user would; headless Chromium delivers no scroll events, so scrolling
+  itself can't be tested there.
 - Emacs: the preview URL could come out garbled if browser-sync coloured
   its output: it was matched in the de-coloured text but extracted from the
   raw text.
