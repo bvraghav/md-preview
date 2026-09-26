@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Tests: two checks depended on the machine, and failed CI for the
+  `v0.0.3` tag although md-preview itself was fine. The nvm-fallback check
+  now runs only when nvm has browser-sync (CI installs it with
+  `sudo npm -g`). The dropdown check no longer expects a flip at a fixed
+  width, which depends on how fonts make the nav wrap: it checks that the
+  menu flips exactly when it would overflow, and forces a case that needs
+  it.
+
 ## [0.0.3] - 2026-09-26
 
 ### Added
