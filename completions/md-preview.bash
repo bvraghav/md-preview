@@ -36,7 +36,7 @@ _md_preview() {
   local opts
   case $cmd in
     ''|serve) opts='-p --port -b --browser --no-open --listen --' ;;
-    build)    opts='-o --output --embed --assets --' ;;
+    build)    opts='-o --output --embed --assets --force --' ;;
     fetch)    opts='--force' ;;
     docs)     opts='-p --port -b --browser --no-open' ;;
     assets)
