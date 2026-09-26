@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A link to a section (`page.html#heading`) landed in the wrong place on
+  pages with diagrams: mermaid drew them after the browser had scrolled,
+  pushing the heading out of view. md-preview now scrolls to the fragment
+  again once the diagrams are drawn, and updates the TOC highlight.
+- Tests: the TOC-highlight check scrolled before mermaid had drawn the
+  diagrams, and failed on the slower CI runner. It now opens a deep link,
+  as a user would; headless Chromium delivers no scroll events, so scrolling
+  itself can't be tested there.
+
 ## [0.1.0] - 2026-09-26
 
 md-preview is now installable by others: an AUR package, a MELPA-ready

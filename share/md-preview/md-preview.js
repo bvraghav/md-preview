@@ -147,5 +147,6 @@
   }, { passive: true });
   addEventListener('resize', spy);
   addEventListener('load', spy);
+  addEventListener('md-preview:layout', spy);   // after mermaid has rendered
   spy();
 })();

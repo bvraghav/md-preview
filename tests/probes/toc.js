@@ -6,9 +6,19 @@ window.addEventListener('load', function () {
     document.body.appendChild(p);
   }
   var r = {}, toc = document.querySelector('.mdp-toc'), box = toc.querySelector('details');
-  document.getElementById('entity-relationship').scrollIntoView();
-  setTimeout(function () {
+  // Opened as demo.html#entity-relationship (see test-browser.sh). Headless
+  // Chromium runs no animation frames or scroll events after load, so this
+  // tests the deep-link path: md-preview re-scrolls to the fragment and
+  // updates the highlight once mermaid has drawn the diagrams above it.
+  var target = document.getElementById('entity-relationship');
+  var tries = 0;
+  (function wait() {
+    if (document.documentElement.dataset.mermaid !== 'done' && ++tries <= 100) return setTimeout(wait, 100);
+    setTimeout(check, 300);
+  })();
+  function check() {
     var act = toc.querySelector('.mdp-active');
+    r.target_top = Math.round(target.getBoundingClientRect().top);
     r.active = act ? act.textContent : 'none';
     r.active_count = toc.querySelectorAll('.mdp-active').length;
     var was = box.open;
@@ -23,5 +33,5 @@ window.addEventListener('load', function () {
       r.saved_matches = saved.length === 1 && saved[0].slice(-1) === (was ? '0' : '1');
       report(r);
     }, 150);
-  }, 300);
+  }
 });

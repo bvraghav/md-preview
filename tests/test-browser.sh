@@ -28,17 +28,17 @@ srv=$!
 trap 'kill $srv 2>/dev/null' EXIT
 wait_for 10 curl -sf -o /dev/null "http://127.0.0.1:$port/" || skip "http server did not start"
 
-# probe PAGE PROBE WIDTH — load PAGE with probes/PROBE.js at WIDTH px; the
+# probe PAGE PROBE WIDTH [#FRAGMENT] — load PAGE with probes/PROBE.js at WIDTH px; the
 # results go to $R (key=value lines). The page keeps its own file name, so
 # anything that depends on the URL (like the nav's current page) still works.
 R=$WORK/probe.out
 probe() {
-  local page=$1 name=$2 width=$3
+  local page=$1 name=$2 width=$3 frag=${4:-}
   cp "$WWW/$page" "$WWW/$page.orig"
   sed -i "s|</body>|<script src=\"__probe/$name.js\"></script></body>|" "$WWW/$page"
   timeout 90 "$CHROME" --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
     --window-size="$width,900" --virtual-time-budget=25000 \
-    --dump-dom "http://127.0.0.1:$port/$page" 2>/dev/null |
+    --dump-dom "http://127.0.0.1:$port/$page$frag" 2>/dev/null |
     sed -n '/<pre id="probe">/,/<\/pre>/p' | sed 's/<[^>]*>//g; s/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g' > "$R"
   mv "$WWW/$page.orig" "$WWW/$page"
   [[ -s $R ]] || bad "probe $name on $page returned nothing (chrome failed?)"
@@ -66,8 +66,10 @@ eq "TOC inline closed by default"            false "$(val toc_open)"
 
 echo "== TOC behaviour"
 for w in 1500 800; do
-  probe demo.html toc $w
+  probe demo.html toc $w '#entity-relationship'
+  ge "${w}px: deep link lands on its heading"   0 "$(( 80 - $(val target_top) ))"
   eq "${w}px: highlights the current section"  "3.5 Entity relationship" "$(val active)"
+  [[ $(val active) == "3.5 Entity relationship" ]] || note "target heading ended at ${w}px viewport top=$(val target_top)px"
   eq "${w}px: exactly one highlighted"         1 "$(val active_count)"
   eq "${w}px: toggle remembered"               true "$(val saved_matches)"
 done

@@ -32,6 +32,8 @@ $endfor$
   <script>
     // Keep the scroll position across live reloads. Restored on load and
     // again after mermaid has rendered, since diagrams change the layout.
+    // With no saved position, a #fragment is honoured the same way: the
+    // diagrams above it would otherwise push the target out of view.
     (function () {
       var key = 'md-preview-scroll:' + location.pathname;
       addEventListener('beforeunload', function () {
@@ -40,8 +42,10 @@ $endfor$
       window.mdPreviewRestoreScroll = function () {
         try {
           var y = sessionStorage.getItem(key);
-          if (y !== null) scrollTo(0, +y);
+          if (y !== null) { scrollTo(0, +y); return; }
         } catch (e) {}
+        var target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+        if (target) target.scrollIntoView();
       };
       addEventListener('load', window.mdPreviewRestoreScroll);
     })();
@@ -106,6 +110,8 @@ $if(md-preview-has-mermaid)$
       .finally(function () {
         document.documentElement.dataset.mermaid = 'done';
         window.mdPreviewRestoreScroll();
+        // Layout changed without a scroll event; let md-preview.js update.
+        dispatchEvent(new Event('md-preview:layout'));
       });
   })();
 </script>
