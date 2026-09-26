@@ -15,6 +15,8 @@ reloads the page every time you save the file. Stop it with `Ctrl-C`.
 **Live demo:**
 [`test-sample.md` as rendered by
 md-preview](https://bvraghav.github.io/md-preview/demo.html)  
+**Folder demo:**
+[a folder of Markdown, with its file tree](https://bvraghav.github.io/md-preview/folder-demo/)  
 The whole site is built with md-preview itself; see [`site/`](site/Makefile).
 
 ---
@@ -43,6 +45,10 @@ The whole site is built with md-preview itself; see [`site/`](site/Makefile).
 - **Pandoc Markdown**: tables, footnotes, task lists, definition lists,
   GitHub alerts (`> [!NOTE]`), `==mark==`, `:emoji:`, fenced divs,
   syntax highlighting, citations.
+- **Whole folders**: `md-preview ~/notes` previews every Markdown file in a
+  folder, with a file tree on every page; links between the files go to
+  their pages, and a folder's `README.md` is its index. `md-preview build
+  ~/notes` renders the folder once, incrementally, ready to publish.
 - **Easy to navigate**: an automatic table of contents (a sidebar on wide
   screens, which highlights the section you're reading), `#` links on
   headings, and Copy buttons on code blocks.
@@ -92,6 +98,9 @@ md-preview serve notes.md -- --toc      # extra pandoc options after --
 
 md-preview build notes.md               # one-shot: writes notes.html next to notes.md
 md-preview build --embed notes.md -o /tmp/notes.html   # single self-contained file
+
+md-preview ~/notes                      # a whole folder, live, with a file tree
+md-preview build ~/notes -o ~/notes-html   # a folder, once (default: ~/notes/_site)
 
 md-preview docs                         # this documentation, at http://localhost:6996
 ```

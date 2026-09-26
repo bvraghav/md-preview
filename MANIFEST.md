@@ -50,7 +50,8 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 | File                            | Purpose |
 |---------------------------------|---------|
 | `site/Makefile`                 | Builds `site/_site/`: README → `index.html`, test-sample → `demo.html`, CHANGELOG, LICENSE, MANIFEST, REFERENCE, TODO, INSTALL, CONTRIBUTING → lower-case `.html`, emacs/INSTALL → `emacs.html`, test-sample source → `demo-source.html`; copies md-preview's assets (stylesheet, KaTeX, mermaid) and `test-assets/` for the demo. `make serve` previews locally |
-| `site/links.lua`                | Pandoc filter: rewrites links between repo files to site pages, and other relative links to GitHub |
+| `site/pages.yaml`               | The site's pages: source file, page name, title, TOC and extras; read by the Makefile and `links.lua` |
+| `site/links.lua`                | Site filter (runs before md-preview's): maps links between repo files to pages (others to GitHub), sets titles, adds footers and the "View source" link |
 | `site/nav.html.in`              | Navigation bar (`@REPO_URL@` substituted) with a "More" dropdown for secondary pages; marks the current page |
 | `site/site.css`                 | Site-only styles (nav, "View source" link, footer), layered on `style.css` |
 | `site/source-page.sh`           | Wraps a file verbatim in a fence nothing inside can close; builds the demo's View source page |
@@ -61,6 +62,7 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 
 | File                     | Purpose |
 |--------------------------|---------|
+| `tests/folder-sample/`   | A folder for folder mode: README → index, a folder with `index.md`, one without (a listing), a name with a space, nested pages, links of every kind, an image, and a hidden folder and `node_modules` to skip. Also published as the folder demo |
 | `test-sample.md`         | Covers every feature: frontmatter, every math syntax, 10 mermaid diagrams, pandoc Markdown blocks, and edge cases for View source. Sections carry **Expect:** notes |
 | `test-assets/badge.svg`  | Image referenced by the sample, to check relative image links; published with the demo (`site/_site/test-assets/`) |
 
@@ -71,7 +73,7 @@ Regression suites; see the Testing section of the README.
 | File                     | Purpose |
 |--------------------------|---------|
 | `tests/README.md`        | How to run the suites, what each covers, bugs they found, how the harness works |
-| `tests/Makefile`         | Runs the suites: `release`, `build`, `completions`, `site`, `serve`, `browser`, `emacs`, `aur`; `ci` is the set GitHub Actions runs |
+| `tests/Makefile`         | Runs the suites: `release`, `build`, `folder`, `completions`, `site`, `serve`, `browser`, `emacs`, `aur`; `ci` is the set GitHub Actions runs |
 | `tests/lib.sh`           | Assertion helpers (`check`, `refute`, `eq`, `ge`, `wait_for`, `skip`, …) shared by the suites |
 | `tests/test-build.sh`    | Rendering, output modes, option precedence, CLI, `assets`, install, View Source round trip |
 | `tests/test-site.sh`     | Website: pages, link rewriting, per-page features, HTTP |
@@ -79,6 +81,7 @@ Regression suites; see the Testing section of the README.
 | `tests/test-browser.sh`  | Headless Chromium runner: injects a probe into a page and checks what it reports |
 | `tests/probes/*.js`      | Browser probes: `render` (math, diagrams, enhancements), `toc`, `dropdown`, `source` (line numbers) |
 | `tests/test-release.sh`  | Version strings and CHANGELOG agree with `VERSION`; with `TAG`, the tag too |
+| `tests/test-folder.sh`   | Folder mode: pages, index and listing pages, link rewriting, assets by depth, the file tree, titles, incremental rebuilds, failures, options |
 | `tests/test-completions.sh` | bash completion (direct), zsh completion (in a real interactive zsh), the man page |
 | `tests/zcomp.zsh`        | Harness: drives an interactive zsh through `zsh/zpty` and prints what Tab offers |
 | `tests/test-aur.sh`      | Builds the AUR package from `HEAD`, checks its contents, runs md-preview from it with nothing fetched |

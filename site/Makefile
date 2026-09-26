@@ -10,7 +10,8 @@
 # the folder is built with `md-preview build`. links.lua maps links between
 # repository files to pages and adds titles, footers and the "View source"
 # link. KaTeX and mermaid are fetched once and self-hosted under
-# _site/_md-preview/.
+# _site/_md-preview/. _site/folder-demo/ is tests/folder-sample built as it
+# is, to show folder mode.
 
 ROOT     := ..
 OUT      := _site
@@ -44,6 +45,8 @@ PANDOC_ARGS := --lua-filter links.lua --metadata-file pages.yaml \
 all: stage $(BUILD)/nav.html | fetch
 	MD_PREVIEW_STATE=$(abspath $(BUILD))/state $(MDP) build $(STAGE) -o $(OUT) -- $(PANDOC_ARGS)
 	cp site.css $(OUT)/$(ASSETS)/site.css
+	@# Folder mode, as md-preview renders a folder: tests/folder-sample.
+	MD_PREVIEW_STATE=$(abspath $(BUILD))/folder-demo-state $(MDP) build $(ROOT)/tests/folder-sample -o $(OUT)/folder-demo
 	@echo "site built in $(OUT)/ ($(SHORT))"
 
 # Rebuilt every time; cheap. Symlinks keep each source's own mtime, so the

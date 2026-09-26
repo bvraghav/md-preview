@@ -40,18 +40,16 @@
 ## Priorities
 
 Work in this order. Item numbers match the Intent list
-(13 was added later). Items 1, 2, 5, 7, 9–13 and part of
+(13 was added later). Items 1, 2, 4, 5, 7–13 and part of
 6 are done; see `# DONE` below.
 
 | # | Item | Release | Why here |
 |---|------|---------|----------|
-| 14 | Release pipeline (bump → AUR) | 0.1.1 | Every later release uses it |
-| 8 | `md-preview.mk` | 0.2.0 | Enables folder mode |
-| 4 | Folder tree and folder mode | 0.2.0 | Biggest feature; builds on 8 |
+| 14 | Release pipeline (bump → AUR) | 0.2.1 | Every later release uses it |
 | 6 | Remaining build-time extras | 0.2.x | "Previous/next" needs folder mode |
 | 3 | Svelte | later | Only if the tree needs search |
 
-## P1: 0.1.1, release pipeline
+## P1: 0.2.1, release pipeline
 
 ### 14. CI/CD: version bump → AUR (and MELPA)
 
@@ -97,55 +95,6 @@ only need keeping in sync.
 - **Testing:** the container steps locally only if
   Docker or Podman is available; otherwise the dry run
   on GitHub is the first test.
-
-## P2: 0.2.0, folder mode
-
-### 8. Replace the script with a Makefile
-
-**Partly.**
-
-Make is the right tool for multi-file builds: it knows
-what depends on what, rebuilds only what changed, and
-`-j` runs pandoc in parallel. It's the wrong tool for
-the interactive side: supervising processes, handling
-signals and cleanup, finding nvm, parsing options, and
-the error page.
-
-My suggestion is a hybrid:
-
-- Keep `md-preview` as the bash front end.
-- Ship `share/md-preview/md-preview.mk` with the
-  generic rules (`%.html` from `%.md`, the tree
-  fragment, assets).
-- The script runs it with `make -f … -j` for folder and
-  site builds.
-- `site/Makefile` just `include`s it.
-- Single-file `serve` stays in bash.
-
-### 4. Folder tree
-
-**Worth it, and folder mode is the
-bigger feature.**
-
-There are really two features here:
-
-- **The tree fragment:** easy. Generate a nested `<ul>`
-  from `find` once per build and include it in each
-  page, behind a hide/show toggle.
-- **Folder mode**, `md-preview serve DIR`: this is an
-  architecture change. It means rendering many files,
-  rewriting `.md` links to `.html` (today that's
-  `site/links.lua`, which would move into the core),
-  and re-rendering everything when a file is added or
-  removed, because the tree changes.
-  - entr's `-d` behaviour fits well here, since it
-    already exits when files are added.
-  - The pain point is pandoc taking about 1.6 s to
-    start, multiplied by N files. That's where parallel
-    builds and the static pandoc build matter.
-- **The real payoff:** `site/` becomes just a
-  folder-mode build plus a page-name mapping, instead
-  of a special case.
 
 ## P3: 0.2.x
 
@@ -209,17 +158,15 @@ settles.
 Planned releases:
 
 - **0.0.3:** released.
-- **0.1.0: installable by others.** Done (see `# DONE`);
-  publishing to the AUR and submitting to MELPA follow
-  the release.
-- **0.1.1: release pipeline.** Item 14: `make bump`, and
+- **0.1.0: installable by others.** Released; publishing
+  to the AUR and submitting to MELPA are still to do.
+- **0.2.0: folder mode.** Done (see `# DONE`). It went
+  ahead of the release pipeline, which therefore becomes
+  0.2.1 (a 0.1.1 can't follow 0.2.0).
+- **0.2.1: release pipeline.** Item 14: `make bump`, and
   publishing to the AUR from CI when a release is
   published. PATCH, since it changes packaging, not
   md-preview's interface.
-- **0.2.0: folder mode.** Items 4 and 8: folder tree,
-  `md-preview.mk`, link rewriting in the core, `site/`
-  rebuilt on folder mode. (Previously planned as 0.1.0;
-  moved so packaging comes first.)
 - **0.2.x:** the rest of item 6.
 - **1.0.0** when the CLI, environment variables,
   frontmatter keys and template variables are frozen,
@@ -230,6 +177,77 @@ Planned releases:
   searchable tree.
 
 # DONE
+
+## 0.2.0
+
+### 8. Replace the script with a Makefile
+
+**Partly.**
+
+Make is the right tool for multi-file builds: it knows
+what depends on what, rebuilds only what changed, and
+`-j` runs pandoc in parallel. It's the wrong tool for
+the interactive side: supervising processes, handling
+signals and cleanup, finding nvm, parsing options, and
+the error page.
+
+My suggestion is a hybrid:
+
+- Keep `md-preview` as the bash front end.
+- Ship `share/md-preview/md-preview.mk` with the
+  generic rules (`%.html` from `%.md`, the tree
+  fragment, assets).
+- The script runs it with `make -f … -j` for folder and
+  site builds.
+- `site/Makefile` just `include`s it.
+- Single-file `serve` stays in bash.
+
+**Re-decided in 0.2.0:** the incremental, parallel
+builder is in the bash script (`folder_build`, pages
+rendered with `xargs -P`), not a Makefile: make can't
+handle spaces in file names, and "My Notes.md" is
+common in real folders. It keeps what make would have
+given: pages re-render only when their source is newer,
+everything re-renders when the set of files or
+md-preview itself changes, and pages render in
+parallel. `site/Makefile` calls `md-preview build`
+instead of including a `.mk` file.
+
+### 4. Folder tree
+
+**Worth it, and folder mode is the
+bigger feature.**
+
+There are really two features here:
+
+- **The tree fragment:** easy. Generate a nested `<ul>`
+  from `find` once per build and include it in each
+  page, behind a hide/show toggle.
+- **Folder mode**, `md-preview serve DIR`: this is an
+  architecture change. It means rendering many files,
+  rewriting `.md` links to `.html` (today that's
+  `site/links.lua`, which would move into the core),
+  and re-rendering everything when a file is added or
+  removed, because the tree changes.
+  - entr's `-d` behaviour fits well here, since it
+    already exits when files are added.
+  - The pain point is pandoc taking about 1.6 s to
+    start, multiplied by N files. That's where parallel
+    builds and the static pandoc build matter.
+- **The real payoff:** `site/` becomes just a
+  folder-mode build plus a page-name mapping, instead
+  of a special case.
+
+**Shipped in 0.2.0:** `md-preview build DIR` and
+`md-preview DIR` (live); README → index, generated
+listings, link rewriting in the core filter, the file
+tree on every page (sidebar/inline, remembered toggle),
+and `M-x md-preview-folder` in Emacs. `site/` is built
+this way (`site/pages.yaml`), and publishes
+`tests/folder-sample` as a folder demo. The live
+preview's watcher handles files in new subfolders and
+saves during a build; both were bugs the new tests
+found.
 
 ## 0.1.0
 

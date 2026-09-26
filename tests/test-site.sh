@@ -48,6 +48,13 @@ check "nav on every page"     bash -c "for f in $OUT/*.html; do grep -q 'class=\
 check "footer with version"   grep -q "Rendered by md-preview $(cat VERSION)" "$OUT/index.html"
 check "live-preview bar hidden by site.css" grep -q '\.mdp-bar { display: none; }' "$OUT/_md-preview/site.css"
 
+echo "== folder demo"
+check "built"                            test -f "$OUT/folder-demo/index.html"
+check "  with a file tree"               grep -q 'class="mdp-tree"' "$OUT/folder-demo/notes/deep/page.html"
+check "  and its own assets"             test -f "$OUT/folder-demo/_md-preview/share/style.css"
+refute "  without build state"           test -e "$OUT/folder-demo/.md-preview"
+check "  linked from the nav"            grep -q 'href="folder-demo/index.html"' "$OUT/index.html"
+
 echo "== install-docs"
 D=$WORK/site-destdir; rm -rf "$D"
 check "make install-docs DESTDIR"        make -s install-docs DESTDIR="$D" PREFIX=/usr
@@ -66,7 +73,8 @@ wait_for 10 curl -sf -o /dev/null "http://127.0.0.1:$port/"
 for u in "" $(for p in $pages; do echo "$p.html"; done) test-assets/badge.svg \
          _md-preview/share/style.css _md-preview/share/md-preview.js _md-preview/site.css \
          _md-preview/vendor/katex/katex.min.js _md-preview/vendor/katex/fonts/KaTeX_Main-Regular.woff2 \
-         _md-preview/vendor/katex/contrib/mhchem.min.js _md-preview/vendor/mermaid/mermaid.min.js; do
+         _md-preview/vendor/katex/contrib/mhchem.min.js _md-preview/vendor/mermaid/mermaid.min.js \
+         folder-demo/ "folder-demo/notes/My%20Notes.html" folder-demo/guide/diagram.svg; do
   eq "GET /$u" 200 "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/$u")"
 done
 
