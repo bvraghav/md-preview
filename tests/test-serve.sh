@@ -21,7 +21,7 @@ PID='' PORT='' LOG='' RUNS=0
 start() {
   PORT=$(free_port)
   RUNS=$((RUNS + 1)); LOG=$W/serve-$RUNS.log
-  env "$@" XDG_RUNTIME_DIR="$W/run" setsid "$MDP" serve --no-open --port "$PORT" "$DOC" \
+  env "$@" XDG_RUNTIME_DIR="$W/run" setsid "$MDP" serve --no-open --port "$PORT" "${TARGET:-$DOC}" \
     >"$LOG" 2>&1 &
   PID=$!
   wait_for 30 curl -sf -o /dev/null "http://localhost:$PORT/"
@@ -105,6 +105,42 @@ refute "temp directory removed"       test -e "$dir"
 check "no entr left behind"           gone "entr .*$DOC"
 check "no browser-sync left behind"   gone "browser-sync start .*$W/run"
 refute "port released"                curl -sf -o /dev/null "http://localhost:$PORT/"
+
+echo "== folder"
+F=$W/folder
+cp -r "$ROOT/tests/folder-sample" "$F"
+printf '<html><body>FOLDER-INDEX</body></html>\n' > "$F/index.html"
+st() { curl -s -o /dev/null -w '%{http_code}' "http://localhost:$PORT/$1"; }
+gets() { [[ $(st "$1") == "$2" ]]; }
+if TARGET=$F start; then
+  ok "folder preview starts"
+  check "/ is the README's page"          has 'Folder sample'
+  refute "  not the folder's index.html"  has 'FOLDER-INDEX'
+  for u in guide/intro.html "notes/My%20Notes.html" guide/diagram.svg notes/deep/ _md-preview/share/md-preview.js; do
+    eq "  GET /$u"                        200 "$(st "$u")"
+  done
+  check "file tree on the page"           has 'class="mdp-tree"'
+  printf '\nFOLDER-EDIT\n' >> "$F/guide/intro.md"
+  check "an edit shows up"                wait_for 30 bash -c "curl -s http://localhost:$PORT/guide/intro.html | grep -q FOLDER-EDIT"
+  check "  rebuilding one page"           wait_for 5 grep -q 'updated 1 of 9 pages' "$LOG"
+  printf '# Fresh\n' > "$F/guide/fresh.md"
+  check "a new file gets a page"          wait_for 30 gets guide/fresh.html 200
+  check "  and joins the tree"            wait_for 30 bash -c "curl -s http://localhost:$PORT/ | grep -q 'guide/fresh.html'"
+  rm "$F/guide/fresh.md"
+  check "a deleted file's page goes"      wait_for 30 gets guide/fresh.html 404
+  mkdir -p "$F/extra"; printf '# Extra\n' > "$F/extra/x.md"
+  check "a file in a new subfolder"       wait_for 30 gets extra/x.html 200
+  mkdir -p "$F/later"; sleep 3; printf '# Later\n' > "$F/later/y.md"
+  check "a folder created empty, filled later" wait_for 30 gets later/y.html 200
+  printf -- '---\ntitle: [bad\n---\n' > "$F/guide/advanced.md"
+  check "a broken page shows its error"   wait_for 30 bash -c "curl -s http://localhost:$PORT/guide/advanced.html | grep -q '<h1>pandoc failed'"
+  dir=$(ls -d "$W"/run/md-preview.* 2>/dev/null | head -1)
+  stop
+  refute "stopped: temp directory removed" test -e "$dir"
+  check "  no entr left behind"           gone "entr .*$F"
+else
+  bad "folder preview starts"; sed 's/^/     /' "$LOG"
+fi
 
 echo "== docs"
 if [[ -f $ROOT/site/_site/index.html ]]; then

@@ -18,6 +18,11 @@ All notable changes to this project are documented here. The format follows
   `md-preview-tree: false`. Builds are incremental and render pages in
   parallel (`MD_PREVIEW_JOBS`); `--force` renders everything. Hidden
   folders and `node_modules` are skipped.
+- **Live folder preview:** `md-preview DIR` serves the whole folder and
+  keeps it up to date: a save re-renders just that page, and adding,
+  removing or moving files (including into new subfolders) rebuilds the
+  trees. A save made while a build is running is not lost. A folder's own
+  `index.html` doesn't shadow the preview.
 - A page without a `title` now takes its `<title>` from its first
   level-1 heading, before falling back to the file name.
 
