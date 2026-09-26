@@ -23,6 +23,8 @@ All notable changes to this project are documented here. The format follows
   removing or moving files (including into new subfolders) rebuilds the
   trees. A save made while a build is running is not lost. A folder's own
   `index.html` doesn't shadow the preview.
+- **Emacs:** `M-x md-preview-folder` previews a folder (default: the
+  current project's root), and `md-preview-folder-stop` stops it.
 - A page without a `title` now takes its `<title>` from its first
   level-1 heading, before falling back to the file name.
 - `md-preview-before-html`: a template slot a user filter can fill per

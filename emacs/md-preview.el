@@ -62,6 +62,9 @@ Useful when Emacs does not inherit your shell's PATH, e.g.
 (defvar-local md-preview--process nil
   "The md-preview process serving this buffer, if any.")
 
+(defvar md-preview--folders (make-hash-table :test #'equal)
+  "Running folder previews: folder name (with a trailing slash) to process.")
+
 (defconst md-preview--install-url
   "https://bvraghav.github.io/md-preview/install.html"
   "Where to read how to install the md-preview command.")
@@ -73,6 +76,9 @@ Useful when Emacs does not inherit your shell's PATH, e.g.
 (defun md-preview--sentinel (proc event)
   "Handle EVENT for md-preview process PROC: turn the mode off when it exits."
   (unless (process-live-p proc)
+    (let ((dir (process-get proc 'md-preview-folder)))
+      (when (and dir (eq (gethash dir md-preview--folders) proc))
+        (remhash dir md-preview--folders)))
     (let ((buf (process-get proc 'md-preview-source)))
       (when (buffer-live-p buf)
         (with-current-buffer buf
@@ -107,6 +113,25 @@ MELPA installs only this package, not the command it drives."
       (user-error "The `%s' command was not found: install it (see %s), or set `md-preview-program'"
                   md-preview-program md-preview--install-url)))
 
+(defun md-preview--spawn (target)
+  "Start `md-preview serve' for TARGET, a file or a folder; return the process.
+Its output goes to a log buffer named after TARGET."
+  (let* ((program (md-preview--program))
+         (process-environment (append md-preview-environment process-environment))
+         (log (get-buffer-create (md-preview--log-buffer-name target)))
+         (proc (make-process
+                :name "md-preview"
+                :buffer log
+                :command `(,program "serve" ,@md-preview-args ,target)
+                :connection-type 'pipe
+                :noquery t
+                :filter #'md-preview--filter
+                :sentinel #'md-preview--sentinel)))
+    (with-current-buffer log
+      (goto-char (point-max))
+      (insert (format "\n--- %s: %s\n" (current-time-string) target)))
+    proc))
+
 ;;;###autoload
 (defun md-preview-start ()
   "Start a live preview of the current buffer's file."
@@ -119,21 +144,8 @@ MELPA installs only this package, not the command it drives."
                  (if url (concat " at " url) "")))
     (when (and md-preview-save-before-start (buffer-modified-p))
       (save-buffer))
-    (let* ((program (md-preview--program))
-           (file (expand-file-name buffer-file-name))
-           (process-environment (append md-preview-environment process-environment))
-           (log (get-buffer-create (md-preview--log-buffer-name file)))
-           (proc (make-process
-                  :name "md-preview"
-                  :buffer log
-                  :command `(,program "serve" ,@md-preview-args ,file)
-                  :connection-type 'pipe
-                  :noquery t
-                  :filter #'md-preview--filter
-                  :sentinel #'md-preview--sentinel)))
-      (with-current-buffer log
-        (goto-char (point-max))
-        (insert (format "\n--- %s: %s\n" (current-time-string) file)))
+    (let* ((file (expand-file-name buffer-file-name))
+           (proc (md-preview--spawn file)))
       (process-put proc 'md-preview-source (current-buffer))
       (setq md-preview--process proc)
       (add-hook 'kill-buffer-hook #'md-preview-stop nil t)
@@ -168,6 +180,55 @@ MELPA installs only this package, not the command it drives."
   (let ((url (and md-preview--process
                   (process-get md-preview--process 'md-preview-url))))
     (if url (browse-url url) (user-error "No md-preview running for this buffer"))))
+
+;;; Folder previews
+
+(declare-function project-current "project")
+(declare-function project-root "project")
+
+(defun md-preview--default-folder ()
+  "The folder to preview by default: the current project's root, if any."
+  (or (and (require 'project nil t)
+           (fboundp 'project-root)
+           (let ((proj (project-current)))
+             (and proj (project-root proj))))
+      default-directory))
+
+;;;###autoload
+(defun md-preview-folder (dir)
+  "Start a live preview of the Markdown files in DIR, with a file tree.
+Interactively, ask for DIR, defaulting to the current project's root.  If
+DIR is already being previewed, open it in the browser again."
+  (interactive (list (read-directory-name "Preview folder: " (md-preview--default-folder) nil t)))
+  (let* ((dir (file-name-as-directory (expand-file-name dir)))
+         (proc (gethash dir md-preview--folders)))
+    (if (process-live-p proc)
+        (let ((url (process-get proc 'md-preview-url)))
+          (if url (browse-url url) (message "md-preview: %s is starting" dir)))
+      (setq proc (md-preview--spawn (directory-file-name dir)))
+      (process-put proc 'md-preview-folder dir)
+      (puthash dir proc md-preview--folders)
+      (message "md-preview: starting for %s" dir))))
+
+(defun md-preview-folder-stop (dir)
+  "Stop the live preview of folder DIR.
+Interactively, choose among the running folder previews."
+  (interactive
+   (let ((running (let (l)
+                    (maphash (lambda (k p) (when (process-live-p p) (push k l))) md-preview--folders)
+                    l)))
+     (unless running (user-error "No folder preview is running"))
+     (list (if (cdr running)
+               (completing-read "Stop folder preview: " running nil t)
+             (car running)))))
+  (let* ((dir (file-name-as-directory (expand-file-name dir)))
+         (proc (gethash dir md-preview--folders)))
+    (remhash dir md-preview--folders)
+    (when (process-live-p proc)
+      (signal-process proc 'SIGTERM)
+      (run-at-time 3 nil (lambda ()
+                           (when (process-live-p proc)
+                             (kill-process proc)))))))
 
 ;;;###autoload
 (define-minor-mode md-preview-mode
