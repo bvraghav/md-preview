@@ -11,7 +11,7 @@ make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
-At 0.1.0 all eight pass: **323 checks**, about 2 minutes. CI runs fewer:
+At 0.1.0 all eight pass: **326 checks**, about 2 minutes. CI runs fewer:
 `emacs` and `aur` don't run there, and the zsh and nvm-fallback checks
 don't apply on the runner.
 
@@ -20,8 +20,8 @@ don't apply on the runner.
 | `build` | 78 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
 | `completions` | 40 | bash completion called directly; zsh completion in a real interactive zsh (driven through `zsh/zpty` by `zcomp.zsh`); the man page builds and has every section | zsh, pandoc, man |
 | `site` | 73 | the website: page set, link rewriting, frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
-| `serve` | 36 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
-| `browser` | 40 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
+| `serve` | 37 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
+| `browser` | 42 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
 | `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
 | `aur` | 25 | builds the AUR package from a tarball of `HEAD` (checks run inside), checks its contents, and runs md-preview from the unpacked package with nothing fetched: packaged KaTeX and mermaid, `docs` from `/usr/share/doc`, the man page; `.SRCINFO` matches the PKGBUILD | makepkg (Arch; not on CI) |
 | `emacs` | 20 | the Emacs package byte-compiles cleanly and passes `checkdoc` and `package-lint` (MELPA's checks) with a full header; a missing `md-preview` command gives a helpful error and leaves the mode off; the URL is parsed from coloured output; `md-preview-mode` starts, reports its URL and stops cleanly | emacs (package-lint is fetched from MELPA) |
