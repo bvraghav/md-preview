@@ -11,7 +11,7 @@ make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
-At 0.2.0 all nine pass: **438 checks**, about 2½ minutes. CI runs fewer:
+At 0.2.0 all nine pass: **439 checks**, about 2½ minutes. CI runs fewer:
 `emacs` and `aur` don't run there, and the zsh and nvm-fallback checks
 don't apply on the runner.
 
@@ -20,7 +20,7 @@ don't apply on the runner.
 | `build` | 78 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
 | `folder` | 66 | folder mode on `tests/folder-sample`: the page set, README/index/listing pages, link rewriting (`../`, anchors, folders, spaces), assets relative to depth, the file tree (current page, open folders), titles, incremental rebuilds (edit, add, remove, `--force`), a broken page, options, user-filter order, single files unchanged | pandoc |
 | `completions` | 42 | bash completion called directly; zsh completion in a real interactive zsh (driven through `zsh/zpty` by `zcomp.zsh`); the man page builds and has every section | zsh, pandoc, man |
-| `site` | 91 | the website: page set, link rewriting, frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
+| `site` | 92 | the website: page set, link rewriting, every `#anchor` link lands (`anchors.py`), frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
 | `serve` | 56 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback; for a folder: edits, new and deleted files, a file in a new subfolder, a folder created empty and filled later, a broken page, cleanup | entr, browser-sync |
 | `browser` | 43 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
 | `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
@@ -38,8 +38,8 @@ there as a quick smoke test.
   that highlights the section you're reading; narrower, it's a collapsible
   box below the title. It remembers whether you left it open, and appears
   only when a page has 3+ headings; `md-preview-toc: false` or
-  `MD_PREVIEW_TOC` overrides that. The site turns it off for README, which
-  has its own Contents.
+  `MD_PREVIEW_TOC` overrides that. (The site turned it off for README,
+  which had its own Contents, until 0.2.0 removed the hand-written lists.)
 - **Anchors and copy buttons:** `#` links on headings and a Copy button on
   every code block, from one new file, `share/md-preview/md-preview.js`.
 - **View Source:** the demo links to `demo-source.html`, which md-preview
@@ -82,6 +82,10 @@ In 0.2.0, the folder-mode tests found:
 - **The site's stylesheet stopped overriding md-preview's**, after user
   options were moved before md-preview's own; the preview bar would have
   shown on the website. The browser suite now checks the bar is hidden.
+- **Section links on the website that went nowhere** (reported by a
+  user): hand-written contents lists linked `#6-emacs`, GitHub's anchor
+  for "6. Emacs", but pandoc makes it `#emacs`. `anchors.py` found all 8
+  such links, on the site's pages and from README to INSTALL.
 - **Mistakes in the tests themselves**, each caught and fixed while
   writing them:
   - (0.2.0) a `for f in $(find …)` loop in a check split "My Notes.html",

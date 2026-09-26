@@ -21,17 +21,6 @@ The whole site is built with md-preview itself; see [`site/`](site/Makefile).
 
 ---
 
-## Contents
-
-- [What you get](#what-you-get)
-- [Setup](#setup)
-- [Everyday use](#everyday-use)
-- [Robustness](#robustness)
-- [Publishing pages](#publishing-pages)
-- [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-
 ## What you get
 
 - **Frontmatter**: YAML metadata becomes the title block (title, subtitle,
@@ -181,7 +170,7 @@ request. `make check` is still there as a quick smoke test.
 
 **Every save takes 3–4 seconds to show up.** That's pandoc starting up.
 Run `time pandoc --version`; if it takes more than about 0.3 s, switch to
-the static pandoc build (see [INSTALL.md](INSTALL.md#1-requirements)).
+the static pandoc build (see [INSTALL.md](INSTALL.md#requirements)).
 
 **`browser-sync not found`.** Run `md-preview doctor`. If browser-sync is
 somewhere unusual, set `MD_PREVIEW_BROWSER_SYNC=/path/to/browser-sync`.

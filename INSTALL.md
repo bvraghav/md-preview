@@ -15,18 +15,7 @@ The rest of this page covers **installation from source**. The commands are
 for Arch Linux; other distributions have the same tools under the same or
 similar package names.
 
-- [1. Requirements](#1-requirements)
-- [2. Install from source](#2-install-from-source)
-- [3. Fetch KaTeX and mermaid for offline use](#3-fetch-katex-and-mermaid-for-offline-use)
-- [4. Check the installation](#4-check-the-installation)
-- [5. Try it](#5-try-it)
-- [6. Emacs](#6-emacs)
-- [7. Documentation offline](#7-documentation-offline)
-- [Packagers](#packagers)
-- [Upgrading](#upgrading)
-- [Uninstalling](#uninstalling)
-
-## 1. Requirements
+## Requirements
 
 | Tool           | Why                                   | Install (Arch)                  |
 |----------------|---------------------------------------|---------------------------------|
@@ -66,7 +55,7 @@ loaded, for example when a GUI Emacs starts it without your shell's PATH.
 It checks `$NVM_DIR`, `~/.config/nvm`, `~/.nvm` and `/usr/share/nvm`, in
 that order, then runs `nvm use stable`.
 
-## 2. Install from source
+## Install from source
 
 ```sh
 git clone https://github.com/bvraghav/md-preview.git
@@ -108,7 +97,7 @@ make link                             # symlink ~/.local/bin/md-preview -> ./bin
 support files by following its own symlink, so it uses the repository's
 `share/md-preview/`, and edits take effect on the next save.
 
-## 3. Fetch KaTeX and mermaid for offline use
+## Fetch KaTeX and mermaid for offline use
 
 ```sh
 md-preview fetch
@@ -128,7 +117,7 @@ MD_PREVIEW_KATEX_VERSION=0.16.22 MD_PREVIEW_MERMAID_VERSION=11.12.0 md-preview f
 The same variables must also be set when running `md-preview` if the vendor
 directory is absent and you want those versions from the CDN.
 
-## 4. Check the installation
+## Check the installation
 
 ```sh
 md-preview doctor
@@ -147,7 +136,7 @@ mermaid        /home/you/.local/share/md-preview/vendor/mermaid (fetched, 12.0.0
 all good
 ```
 
-## 5. Try it
+## Try it
 
 From the repository:
 
@@ -159,7 +148,7 @@ make test                      # the regression suites; see tests/README.md
 [`test-sample.md`](test-sample.md) exercises every supported feature. Each
 section has an **Expect:** note saying what should appear.
 
-## 6. Emacs
+## Emacs
 
 `make install` puts `md-preview.el` in `~/.local/share/emacs/site-lisp/`.
 It adds a minor mode that starts one `md-preview` process per buffer and
@@ -197,7 +186,7 @@ If `md-preview` itself isn't on Emacs' `exec-path`, set
 `md-preview-program` to its absolute path, or use
 [`exec-path-from-shell`](https://github.com/purcell/exec-path-from-shell).
 
-## 7. Documentation offline
+## Documentation offline
 
 ```sh
 make install-docs

@@ -18,7 +18,6 @@ md-preview-site:
     - page: index
       source: README.md
       title: md-preview
-      toc: false
     - page: install
       source: INSTALL.md
       title: md-preview · Install

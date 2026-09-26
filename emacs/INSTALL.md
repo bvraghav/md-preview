@@ -8,12 +8,6 @@ The package drives the **`md-preview` command**, which is installed
 separately; see [INSTALL.md](../INSTALL.md). Check it with
 `md-preview doctor` in a terminal first.
 
-- [Install the package](#install-the-package)
-- [Configure](#configure)
-- [Commands and options](#commands-and-options)
-- [When Emacs can't find things](#when-emacs-cant-find-things)
-- [Testing an unreleased version](#testing-an-unreleased-version)
-
 ## Install the package
 
 ### From MELPA

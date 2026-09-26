@@ -50,6 +50,15 @@ on every page and links between the files that just work.
   before md-preview's own, so they see the document as written. User
   stylesheets still come after md-preview's, so they override it.
 
+### Fixed
+
+- **Broken section links on the website:** README, INSTALL, REFERENCE and
+  emacs/INSTALL had hand-written contents lists, and INSTALL's numbered
+  headings get different anchors on GitHub (`#6-emacs`) and from pandoc
+  (`#emacs`). The lists are gone (every page has the automatic TOC, now
+  README too), INSTALL's headings are unnumbered, and the site suite checks
+  that every `#anchor` link on the site lands.
+
 ## [0.1.0] - 2026-09-26
 
 md-preview is now installable by others: an AUR package, a MELPA-ready

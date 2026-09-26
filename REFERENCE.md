@@ -3,23 +3,6 @@
 Complete interface for md-preview 0.2.0. For installation and a quick start
 see [README.md](README.md).
 
-- [Command line](#command-line)
-- [Environment variables](#environment-variables)
-- [Files and directories](#files-and-directories)
-- [How serve works](#how-serve-works)
-- [Markdown dialect](#markdown-dialect)
-- [Math (KaTeX)](#math-katex)
-- [Diagrams (mermaid)](#diagrams-mermaid)
-- [Frontmatter](#frontmatter)
-- [Page enhancements](#page-enhancements)
-- [Folder mode](#folder-mode)
-- [Template variables](#template-variables)
-- [Lua filter](#lua-filter)
-- [Styling](#styling)
-- [Emacs package](#emacs-package)
-- [Exit status](#exit-status)
-- [Known limitations](#known-limitations)
-
 ## Command line
 
 ```

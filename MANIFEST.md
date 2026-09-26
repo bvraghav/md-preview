@@ -74,6 +74,7 @@ Regression suites; see the Testing section of the README.
 |--------------------------|---------|
 | `tests/README.md`        | How to run the suites, what each covers, bugs they found, how the harness works |
 | `tests/Makefile`         | Runs the suites: `release`, `build`, `folder`, `completions`, `site`, `serve`, `browser`, `emacs`, `aur`; `ci` is the set GitHub Actions runs |
+| `tests/anchors.py`       | Checks that every `#anchor` link in a built site lands on an element with that id |
 | `tests/lib.sh`           | Assertion helpers (`check`, `refute`, `eq`, `ge`, `wait_for`, `skip`, …) shared by the suites |
 | `tests/test-build.sh`    | Rendering, output modes, option precedence, CLI, `assets`, install, View Source round trip |
 | `tests/test-site.sh`     | Website: pages, link rewriting, per-page features, HTTP |

@@ -42,8 +42,9 @@ for p in $pages; do
   n=$(count '<details class="mdp-frontmatter"' "$OUT/$p.html")
   if [[ $p == demo ]]; then eq "frontmatter box on $p" 1 "$n"; else eq "no frontmatter box on $p" 0 "$n"; fi
 done
-for p in index demo-source license; do eq "no TOC on $p" 0 "$(count '<nav id="TOC" class="mdp-toc"' "$OUT/$p.html")"; done
-for p in demo reference changelog manifest todo install contributing emacs; do eq "TOC on $p" 1 "$(count '<nav id="TOC" class="mdp-toc"' "$OUT/$p.html")"; done
+for p in demo-source license; do eq "no TOC on $p" 0 "$(count '<nav id="TOC" class="mdp-toc"' "$OUT/$p.html")"; done
+for p in index demo reference changelog manifest todo install contributing emacs; do eq "TOC on $p" 1 "$(count '<nav id="TOC" class="mdp-toc"' "$OUT/$p.html")"; done
+check "every #anchor link lands (site)"  python3 tests/anchors.py "$OUT"
 check "nav on every page"     bash -c "for f in $OUT/*.html; do grep -q 'class=\"site-nav\"' \$f || exit 1; done"
 check "footer with version"   grep -q "Rendered by md-preview $(cat VERSION)" "$OUT/index.html"
 check "live-preview bar hidden by site.css" grep -q '\.mdp-bar { display: none; }' "$OUT/_md-preview/site.css"
