@@ -135,14 +135,14 @@ md-preview doctor
 ```
 
 ```
-md-preview 0.0.3
+md-preview 0.1.0
 
 pandoc         pandoc 3.10.2
 entr           /usr/bin/entr
 browser-sync   /home/you/.config/nvm/versions/node/v24.19.0/bin/browser-sync (3.0.4)
 share          /home/you/.local/share/md-preview
-katex          /home/you/.local/share/md-preview/vendor/katex (local, 0.18.9)
-mermaid        /home/you/.local/share/md-preview/vendor/mermaid (local, 12.0.0)
+katex          /home/you/.local/share/md-preview/vendor/katex (fetched, 0.18.9)
+mermaid        /home/you/.local/share/md-preview/vendor/mermaid (fetched, 12.0.0)
 
 all good
 ```
