@@ -1,6 +1,6 @@
 ;;; md-preview.el --- Live browser preview of Markdown via md-preview  -*- lexical-binding: t; -*-
 
-;; Version: 0.0.2
+;; Version: 0.0.3
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: markdown, tools, preview
 ;; URL: https://github.com/bvraghav/md-preview

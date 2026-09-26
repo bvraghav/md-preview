@@ -1,5 +1,6 @@
-# Build the project website with md-preview itself and publish it to
-# GitHub Pages. Pull requests build and check only; pushes to main deploy.
+# Build the project website with md-preview itself, run the regression
+# tests (tests/), and publish the site to GitHub Pages. Pull requests build
+# and test only; pushes to main also deploy.
 #
 # One-time setup: Settings → Pages → Build and deployment → Source:
 # "GitHub Actions".
@@ -35,17 +36,24 @@ jobs:
           sudo apt-get install -y "$RUNNER_TEMP/pandoc.deb"
           pandoc --version | head -1
 
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y entr
+          sudo npm install -g browser-sync
+          google-chrome --version
+
       - name: Cache KaTeX and mermaid
         uses: actions/cache@v6
         with:
           path: ~/.local/share/md-preview/vendor
           key: md-preview-vendor-${{ hashFiles('bin/md-preview') }}
 
-      - name: Check
-        run: make check
-
       - name: Build site
         run: make -C site
+
+      - name: Regression tests
+        run: make -k -C tests ci MD_PREVIEW_DATA="$HOME/.local/share/md-preview" CHROME=google-chrome
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'

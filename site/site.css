@@ -63,6 +63,18 @@
 .site-menu a:hover,
 .site-menu a:focus-visible { background: var(--subtle); color: var(--link); outline: none; }
 
+/* "View source" on the demo, right-aligned under the nav. */
+.site-source-link { margin: -1rem 0 1rem; text-align: right; font-size: 0.85rem; }
+.site-source-link a {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+}
+.site-source-link a::before { content: "</> "; font-family: var(--mono); }
+.site-source-link a:hover { color: var(--link); border-color: var(--link); text-decoration: none; }
+
 .site-footer {
   margin-top: 4rem;
   padding-top: 1rem;

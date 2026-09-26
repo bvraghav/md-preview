@@ -11,3 +11,6 @@
 # site build
 site/_site/
 site/_build/
+
+# test scratch space
+tests/_work/

@@ -11,14 +11,15 @@ $if(date-meta)$
   <meta name="dcterms.date" content="$date-meta$">
 $endif$
   <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
-$for(css)$
-  <link rel="stylesheet" href="$css$">
-$endfor$
+$-- pandoc's highlighting defaults first, so our stylesheets can override them.
 $if(highlighting-css)$
   <style>
 $highlighting-css$
   </style>
 $endif$
+$for(css)$
+  <link rel="stylesheet" href="$css$">
+$endfor$
 $if(math)$
   $math$
   <script defer src="$md-preview-katex$contrib/mhchem.min.js"></script>
@@ -27,6 +28,7 @@ $endif$
 $for(header-includes)$
   $header-includes$
 $endfor$
+  <script defer src="$md-preview-js$"></script>
   <script>
     // Keep the scroll position across live reloads. Restored on load and
     // again after mermaid has rendered, since diagrams change the layout.
@@ -75,12 +77,14 @@ $abstract$
 $endif$
 </header>
 $endif$
-$if(toc)$
-<nav id="$idprefix$TOC" role="doc-toc">
-$if(toc-title)$
-<h2 id="$idprefix$toc-title">$toc-title$</h2>
-$endif$
+$if(md-preview-toc-show)$
+<nav id="$idprefix$TOC" class="mdp-toc" role="doc-toc" aria-label="Contents">
+<details open>
+<summary>$if(toc-title)$$toc-title$$else$Contents$endif$</summary>
+<div class="mdp-toc-body">
 $table-of-contents$
+</div>
+</details>
 </nav>
 $endif$
 $body$

@@ -4,13 +4,16 @@
 --  * ```math fences     -> display math (GitHub style)
 --  * YAML frontmatter   -> collapsible table above the title block
 --  * pagetitle fallback -> file name, so untitled documents do not warn
+--  * table of contents  -> shown when the page has enough headings
 --
 -- Metadata read (normally set by the md-preview script via -M):
 --   md-preview-file         file name, used as fallback page title
 --   md-preview-frontmatter  open | closed | hide   (default: closed)
+--   md-preview-toc          true | false; unset = automatic (3+ headings)
 -- Metadata written:
 --   md-preview-has-mermaid        true when the document contains a mermaid block
 --   md-preview-frontmatter-html   the rendered frontmatter <details> block
+--   md-preview-toc-show           true when the template should show the TOC
 
 local stringify = pandoc.utils.stringify
 
@@ -90,6 +93,25 @@ local function frontmatter_block(meta, mode)
     mode == 'open' and ' open' or '', n, n == 1 and '' or 's', to_html(shown)))
 end
 
+-- Headings that pandoc's --toc lists (default --toc-depth is 3).
+local TOC_MIN_HEADINGS = 3
+
+local function toc_show(doc)
+  local setting = doc.meta['md-preview-toc']
+  if setting ~= nil then
+    local v = pandoc.utils.type(setting) == 'boolean' and setting or stringify(setting)
+    if v == false or v == 'false' then return false end
+    if v == true or v == 'true' then return true end
+  end
+  local n = 0
+  doc.blocks:walk {
+    Header = function(h)
+      if h.level <= 3 and not h.classes:includes('unlisted') then n = n + 1 end
+    end,
+  }
+  return n >= TOC_MIN_HEADINGS
+end
+
 local function Pandoc(doc)
   local meta = doc.meta
   if not FORMAT:match('html') then return nil end
@@ -106,6 +128,7 @@ local function Pandoc(doc)
   end
 
   if has_mermaid then meta['md-preview-has-mermaid'] = true end
+  if toc_show(doc) then meta['md-preview-toc-show'] = true end
   doc.meta = meta
   return doc
 end

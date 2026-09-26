@@ -1,6 +1,6 @@
 # md-preview reference
 
-Complete interface for md-preview 0.0.2. For installation and a quick start
+Complete interface for md-preview 0.0.3. For installation and a quick start
 see [README.md](README.md).
 
 - [Command line](#command-line)
@@ -11,6 +11,7 @@ see [README.md](README.md).
 - [Math (KaTeX)](#math-katex)
 - [Diagrams (mermaid)](#diagrams-mermaid)
 - [Frontmatter](#frontmatter)
+- [Page enhancements](#page-enhancements)
 - [Template variables](#template-variables)
 - [Lua filter](#lua-filter)
 - [Styling](#styling)
@@ -76,6 +77,7 @@ directory that `PREFIX` points at:
 
 ```
 DIR/share/style.css
+DIR/share/md-preview.js
 DIR/vendor/katex/…          only if fetched; otherwise pages use the CDN
 DIR/vendor/mermaid/…
 ```
@@ -106,6 +108,7 @@ md-preview build notes.md -o - | wc -c
 | `MD_PREVIEW_FROM`             | `markdown+tex_math_single_backslash+alerts+mark+emoji` | pandoc input format and extensions |
 | `MD_PREVIEW_PANDOC_ARGS`      | —                                            | extra pandoc arguments for every render, split on whitespace (e.g. `--toc --number-sections`) |
 | `MD_PREVIEW_FRONTMATTER`      | unset                                        | frontmatter table: `open`, `closed` or `hide`. Overrides the document's own `md-preview-frontmatter` key. If neither is set, `closed` |
+| `MD_PREVIEW_TOC`              | unset                                        | table of contents: `true` or `false`. Overrides the document's own `md-preview-toc` key. If neither is set, shown when the page has 3 or more headings |
 | `MD_PREVIEW_LISTEN`           | `localhost`                                  | default for `serve --listen` |
 | `MD_PREVIEW_BROWSER_SYNC`     | found on `PATH`, then via nvm                | path to the browser-sync executable |
 | `MD_PREVIEW_NVM_VERSION`      | `stable`                                     | version passed to `nvm use` when searching nvm |
@@ -123,6 +126,7 @@ $PREFIX/bin/md-preview                    the script
 $PREFIX/share/md-preview/template.html    pandoc HTML template
 $PREFIX/share/md-preview/filter.lua       pandoc Lua filter
 $PREFIX/share/md-preview/style.css        stylesheet
+$PREFIX/share/md-preview/md-preview.js    page enhancements (anchors, copy, TOC)
 $PREFIX/share/md-preview/VERSION          version string
 $PREFIX/share/emacs/site-lisp/md-preview.el
 
@@ -147,6 +151,8 @@ The script finds its share directory by following its own symlink
 1. Create the per-serve directory and render `index.html` once.
 2. Start a watcher loop. entr watches the source file, `template.html`,
    `filter.lua` and `style.css`, and runs `md-preview _render` on each change.
+   - entr runs with `-a`, so a save made while a render is still running
+     triggers another render rather than being dropped.
    - entr runs with `-d`, so it exits when a file appears in the watched
      directory. That happens with rename-style saves, backup files and
      Emacs lock files. The loop restarts entr, and first re-renders if the
@@ -289,6 +295,38 @@ The table's state is `closed` by default. A document can choose `open`,
 If the document has no `title`, the page `<title>` falls back to the file
 name.
 
+## Page enhancements
+
+The script always passes `--toc`, and every page loads
+`share/md-preview/md-preview.js`. Pages are complete without it; the script
+only adds conveniences.
+
+**Table of contents.** Built by pandoc at render time (`--toc`, depth 3; pass
+`-- --toc-depth=N` to change it), so it needs no JavaScript and uses the real
+heading ids.
+
+- Shown when the page has 3 or more headings, or as set by the document's
+  `md-preview-toc: true|false` key or `MD_PREVIEW_TOC`.
+- It's a `<details>` element titled "Contents" (or `toc-title`).
+- On screens at least 1400px wide it's a fixed sidebar to the right of the
+  content, open by default, and its list scrolls on its own. Narrower, it's a
+  box below the title, closed by default.
+- With JavaScript:
+  - the section being read is highlighted, and the sidebar list scrolls to
+    keep it visible
+  - whether it's open is remembered in `localStorage`, separately for the
+    sidebar and the inline box
+
+**Heading anchors.** Each heading with an id gets a `#` link after it, visible
+on hover or keyboard focus (always, faintly, on touch screens). Headings have
+`scroll-margin-top`, so the sticky bar doesn't cover a heading you jump to.
+
+**Copy buttons.** Each code block gets a Copy button in its top-right corner,
+visible on hover or focus (always on touch screens). It copies the code's text
+without line numbers. It uses the Clipboard API where available and falls back
+to `execCommand('copy')` for `file://` pages. It shows "Copied" or "Failed" for
+1.5 s.
+
 ## Template variables
 
 `share/md-preview/template.html` is a pandoc template. Besides pandoc's
@@ -305,8 +343,11 @@ usual variables (`title`, `author`, `date`, `abstract`, `toc`,
 | `md-preview-katex`             | script (`-V`) | KaTeX base URL, ending in `/`       |
 | `md-preview-mermaid`           | script (`-V`) | URL of `mermaid.min.js`             |
 | `md-preview-frontmatter`       | document, or script (`-M`) when `MD_PREVIEW_FRONTMATTER` is set | `open`, `closed` or `hide` |
+| `md-preview-js`                | script (`-V`) | URL of `md-preview.js`              |
+| `md-preview-toc`               | document, or script (`-M`) when `MD_PREVIEW_TOC` is set | `true` or `false` |
 | `md-preview-frontmatter-html`  | filter   | rendered frontmatter table               |
 | `md-preview-has-mermaid`       | filter   | true if the document has a diagram       |
+| `md-preview-toc-show`          | filter   | true if the template should show the TOC |
 
 Asset URLs depend on the mode:
 
@@ -331,6 +372,9 @@ output format is HTML:
    - sets `pagetitle` from `md-preview-file` when there's no title
    - builds `md-preview-frontmatter-html`
    - sets `md-preview-has-mermaid`
+   - sets `md-preview-toc-show`: from `md-preview-toc` if given, else true
+     when the page has 3 or more headings of level 1–3 (not counting
+     `.unlisted` ones)
 
 Code blocks with any other class, including `text` that merely mentions
 mermaid, are left alone.
@@ -350,6 +394,9 @@ hooks:
 | `div.note`, `.tip`, `.important`, `.warning`, `.caution` | alerts, and fenced divs with those classes |
 | `.katex-display`             | display math, which scrolls sideways when too wide |
 | `pre.mermaid`                | diagram container                        |
+| `.mdp-toc`, `.mdp-toc-body`, `a.mdp-active` | table of contents, its scrolling list, the current section |
+| `.mdp-anchor`                | `#` link added to headings               |
+| `.mdp-copy-wrap`, `.mdp-copy` | wrapper around a code block, and its Copy button |
 
 To add your own stylesheet on top, pass `-- --css /abs/path/extra.css`,
 or edit `style.css`; with `make link` the change shows up on the next

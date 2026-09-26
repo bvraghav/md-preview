@@ -25,6 +25,9 @@ FROM=${MD_PREVIEW_FROM:-markdown+tex_math_single_backslash+alerts+mark+emoji}
 # open | closed | hide; unset lets the document's own md-preview-frontmatter
 # key decide (the filter defaults to closed).
 FRONTMATTER=${MD_PREVIEW_FRONTMATTER:-}
+# true | false; unset = automatic (shown when a page has 3+ headings), and a
+# document's own md-preview-toc key decides.
+TOC=${MD_PREVIEW_TOC:-}
 
 VERSION=unknown
 for f in "$SHARE/VERSION" "$ROOT/VERSION"; do
@@ -100,11 +103,12 @@ find_browser_sync() {
 # fall back to the CDN when they have not been fetched.
 ASSET_PREFIX=''
 
-# Print "css-url katex-base mermaid-url".
+# Print "css-url js-url katex-base mermaid-url".
 asset_urls() {
   local p=$ASSET_PREFIX css katex mermaid
   [[ -z $p || $p == */ ]] || p+=/
   if [[ -n $p ]]; then css=${p}share/style.css; else css=$SHARE/style.css; fi
+  local js=${css%style.css}md-preview.js
   if [[ -r $VENDOR/katex/katex.min.js ]]; then
     if [[ -n $p ]]; then katex=${p}vendor/katex/; else katex=$VENDOR/katex/; fi
   else
@@ -116,20 +120,21 @@ asset_urls() {
   else
     mermaid=$MERMAID_CDN
   fi
-  printf '%s %s %s\n' "$css" "$katex" "$mermaid"
+  printf '%s %s %s %s\n' "$css" "$js" "$katex" "$mermaid"
 }
 
 # run_pandoc SRC OUT [extra pandoc args...]
 run_pandoc() {
   local src=$1 out=$2; shift 2
-  local css katex mermaid
-  read -r css katex mermaid < <(asset_urls)
+  local css js katex mermaid
+  read -r css js katex mermaid < <(asset_urls)
 
   local -a extra=()
   # Word-splitting of MD_PREVIEW_PANDOC_ARGS is intentional.
   # shellcheck disable=SC2206
   [[ -n ${MD_PREVIEW_PANDOC_ARGS:-} ]] && extra=($MD_PREVIEW_PANDOC_ARGS)
   [[ -n $FRONTMATTER ]] && extra+=(-M "md-preview-frontmatter=$FRONTMATTER")
+  [[ -n $TOC ]] && extra+=(-M "md-preview-toc=$TOC")
 
   pandoc "$src" \
     --from "$FROM" --to html5 --standalone \
@@ -137,9 +142,11 @@ run_pandoc() {
     --lua-filter "$SHARE/filter.lua" \
     --katex="$katex" \
     --css "$css" \
+    --toc \
     --resource-path "$(dirname "$src"):." \
     -V md-preview-katex="$katex" \
     -V md-preview-mermaid="$mermaid" \
+    -V md-preview-js="$js" \
     -V md-preview-version="$VERSION" \
     -V md-preview-built="$(date +%H:%M:%S)" \
     -M md-preview-file="$(basename "$src")" \
@@ -264,8 +271,8 @@ cmd_serve() {
     while :; do
       if [[ ! -e $src ]]; then sleep 0.2; continue; fi
       if [[ $src -nt $dir/.stamp ]]; then "$SELF" _render "$src" "$dir" "${pass[@]}"; fi
-      printf '%s\n' "$src" "$SHARE"/{template.html,filter.lua,style.css} |
-        entr -dnp "$SELF" _render "$src" "$dir" "${pass[@]}" || true
+      printf '%s\n' "$src" "$SHARE"/{template.html,filter.lua,style.css,md-preview.js} |
+        entr -adnp "$SELF" _render "$src" "$dir" "${pass[@]}" || true
       sleep 0.1
     done
   ) &
@@ -333,7 +340,7 @@ cmd_assets() {
   local dir=${1:-}
   [[ -n $dir ]] || die "usage: $PROG assets DIR"
   mkdir -p "$dir/share"
-  cp -f "$SHARE/style.css" "$dir/share/style.css"
+  cp -f "$SHARE/style.css" "$SHARE/md-preview.js" "$dir/share/"
   if [[ -d $VENDOR ]]; then
     rm -rf "$dir/vendor"
     cp -rL "$VENDOR" "$dir/vendor"
@@ -355,7 +362,7 @@ cmd_doctor() {
     ok=0; row browser-sync MISSING
   fi
   row share "$SHARE"
-  for f in template.html filter.lua style.css; do
+  for f in template.html filter.lua style.css md-preview.js; do
     [[ -r $SHARE/$f ]] || { ok=0; row '' "missing $f"; }
   done
   if [[ -r $VENDOR/katex/katex.min.js ]]; then

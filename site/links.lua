@@ -28,6 +28,8 @@ local function rewrite(target, repo, ref)
   local path, frag = target:match('^([^#]*)(.*)$')
   path = path:gsub('^%./', '')
   if pages[path] then return pages[path] .. frag end
+  -- already a site page
+  if path:match('%.html$') then return nil end
   if repo and path ~= '' then
     return repo .. '/blob/' .. ref .. '/' .. path .. frag
   end

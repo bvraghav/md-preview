@@ -525,6 +525,38 @@ Here is a footnote reference[^1] and an inline one^[Inline footnote text.].
 
 [^1]: A regular footnote, with `code` and a [link](https://pandoc.org).
 
+# 5 Edge cases for View Source
+
+Expect: this section renders sensibly here, and the site's **View source**
+page for this file reproduces every byte of it: the source page is checked
+by extracting the text back out of the rendered HTML and comparing it.
+
+A fence longer than three backticks, holding a complete `mermaid` fence
+that must stay text:
+
+````markdown
+```mermaid
+flowchart LR
+    A --> B
+```
+````
+
+A code block indented with a tab (kept as a tab in the source view):
+
+	for i in range(3):
+		print(i)  # two tabs
+
+HTML entities and markup-like text: &amp; &lt; &gt; &copy; &#x2603;,
+`</code></pre>` in inline code, and an HTML comment that should not
+show up on the rendered page: <!-- hidden: </pre> $x$ -->
+
+Trailing double spaces force a line break  
+right here, and a line with only spaces follows:
+   
+Non-ASCII: naïve café, Ελληνικά, русский, العربية, 日本語, emoji 🦫.
+
+A dollar pair across a code span: `$not math$` and \$ escaped.
+
 ---
 
 *End of test sample.*
