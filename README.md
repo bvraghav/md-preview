@@ -56,7 +56,15 @@ Full details are in [REFERENCE.md](REFERENCE.md).
 
 ## Setup
 
-On Arch Linux:
+On Arch Linux, from the AUR:
+
+```sh
+yay -S md-preview
+npm install -g browser-sync        # live reload
+md-preview doctor                  # check everything is found
+```
+
+Or from source:
 
 ```sh
 sudo pacman -S pandoc-cli entr make

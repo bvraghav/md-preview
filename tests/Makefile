@@ -8,6 +8,7 @@
 #   make browser      the site in headless Chromium           (chromium or Chrome)
 #   make emacs        the Emacs package                       (emacs)
 #   make completions  bash and zsh completion, man page       (zsh, pandoc)
+#   make aur          build the AUR package and run it        (makepkg; Arch only)
 #   make release      version strings and CHANGELOG agree; with
 #                     TAG=vX.Y.Z also the tag                 (nothing)
 #   make ci           release build site browser serve: what GitHub Actions runs
@@ -18,7 +19,7 @@
 # are fetched once into $(MD_PREVIEW_DATA) (default _work/data). Point
 # MD_PREVIEW_DATA at an existing data directory to reuse its downloads.
 
-SUITES := release build completions site serve browser emacs
+SUITES := release build completions site serve browser emacs aur
 MDP    := ../bin/md-preview
 
 MD_PREVIEW_DATA ?= $(CURDIR)/_work/data
@@ -55,6 +56,10 @@ serve: vendor
 
 emacs:
 	@bash test-emacs.sh
+
+# Downloads KaTeX and mermaid into the package's build directory.
+aur:
+	@bash test-aur.sh
 
 clean:
 	rm -rf _work

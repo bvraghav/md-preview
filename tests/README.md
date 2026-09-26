@@ -22,6 +22,7 @@ the nvm-fallback check doesn't apply).
 | `serve` | 27 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
 | `browser` | 40 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
 | `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
+| `aur` | 25 | builds the AUR package from a tarball of `HEAD` (checks run inside), checks its contents, and runs md-preview from the unpacked package with nothing fetched: packaged KaTeX and mermaid, `docs` from `/usr/share/doc`, the man page; `.SRCINFO` matches the PKGBUILD | makepkg (Arch; not on CI) |
 | `emacs` | 7 | the Emacs package byte-compiles cleanly; `md-preview-mode` starts, reports its URL and stops cleanly | emacs |
 
 A suite whose tools are missing is **skipped, not failed**. GitHub

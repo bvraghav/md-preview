@@ -1,0 +1,58 @@
+# Maintainer: B.V. Raghav <bvraghav@gmail.com>
+
+pkgname=md-preview
+pkgver=0.1.0
+pkgrel=1
+_katex=0.18.9
+_mermaid=12.0.0
+pkgdesc='Live browser preview of Markdown with frontmatter, mermaid diagrams and KaTeX math'
+arch=('any')
+url='https://github.com/bvraghav/md-preview'
+license=('MIT')
+depends=('bash' 'pandoc' 'entr')
+makedepends=('make')
+checkdepends=('python')
+optdepends=('browser-sync: live reload for serve and docs (npm install -g browser-sync)'
+            'python: serve docs when browser-sync is missing'
+            'emacs: md-preview-mode')
+# KaTeX and mermaid are packaged too, so md-preview works offline without
+# `md-preview fetch`, and the documentation builds without network access.
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+        "katex-$_katex.tgz::https://registry.npmjs.org/katex/-/katex-$_katex.tgz"
+        "mermaid-$_mermaid.min.js::https://cdn.jsdelivr.net/npm/mermaid@$_mermaid/dist/mermaid.min.js")
+noextract=("katex-$_katex.tgz")
+sha256sums=('SKIP'
+            '78174318fa53363e4321ac3c10b39d3598aaa73a92dc75362eb08b16f6705782'
+            '28fca7ae6ebc7ed7bb63bde63136a74bfef14f296a57e403657eeb8b32836073')
+
+prepare() {
+  # The layout `md-preview fetch` makes: vendor/katex = KaTeX's dist/,
+  # vendor/mermaid/mermaid.min.js, each with a VERSION file.
+  rm -rf vendor data
+  mkdir -p vendor/katex vendor/mermaid data
+  bsdtar -xf "katex-$_katex.tgz" -C vendor/katex --strip-components 2 package/dist
+  printf '%s\n' "$_katex" > vendor/katex/VERSION
+  cp "mermaid-$_mermaid.min.js" vendor/mermaid/mermaid.min.js
+  printf '%s\n' "$_mermaid" > vendor/mermaid/VERSION
+  ln -s ../vendor data/vendor
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  export MD_PREVIEW_DATA="$srcdir/data"
+  make man
+  make -C site
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  MD_PREVIEW_DATA="$srcdir/data" make check
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  make install        DESTDIR="$pkgdir" PREFIX=/usr
+  make install-vendor DESTDIR="$pkgdir" PREFIX=/usr VENDOR_SRC="$srcdir/vendor"
+  make install-docs   DESTDIR="$pkgdir" PREFIX=/usr MD_PREVIEW_DATA="$srcdir/data"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -32,6 +32,14 @@ Every file in the repository and what it does.
 | `completions/md-preview.bash`      | bash completion: commands, per-command options, Markdown files |
 | `completions/_md-preview`          | zsh completion, the same with descriptions |
 
+## Packaging
+
+| File                          | Purpose |
+|-------------------------------|---------|
+| `packaging/aur/PKGBUILD`      | Arch package: md-preview under `/usr`, with KaTeX, mermaid, the docs, man page, completion and Emacs package |
+| `packaging/aur/.SRCINFO`      | Generated from the PKGBUILD (`makepkg --printsrcinfo`), required by the AUR |
+| `packaging/aur/README.md`     | What the package contains, how to test it, how to publish a new version |
+
 ## Website
 
 The project site, built by md-preview itself and deployed to GitHub Pages.
@@ -60,7 +68,7 @@ Regression suites; see the Testing section of the README.
 | File                     | Purpose |
 |--------------------------|---------|
 | `tests/README.md`        | How to run the suites, what each covers, bugs they found, how the harness works |
-| `tests/Makefile`         | Runs the suites: `release`, `build`, `completions`, `site`, `serve`, `browser`, `emacs`; `ci` is the set GitHub Actions runs |
+| `tests/Makefile`         | Runs the suites: `release`, `build`, `completions`, `site`, `serve`, `browser`, `emacs`, `aur`; `ci` is the set GitHub Actions runs |
 | `tests/lib.sh`           | Assertion helpers (`check`, `refute`, `eq`, `ge`, `wait_for`, `skip`, …) shared by the suites |
 | `tests/test-build.sh`    | Rendering, output modes, option precedence, CLI, `assets`, install, View Source round trip |
 | `tests/test-site.sh`     | Website: pages, link rewriting, per-page features, HTTP |
@@ -70,6 +78,7 @@ Regression suites; see the Testing section of the README.
 | `tests/test-release.sh`  | Version strings and CHANGELOG agree with `VERSION`; with `TAG`, the tag too |
 | `tests/test-completions.sh` | bash completion (direct), zsh completion (in a real interactive zsh), the man page |
 | `tests/zcomp.zsh`        | Harness: drives an interactive zsh through `zsh/zpty` and prints what Tab offers |
+| `tests/test-aur.sh`      | Builds the AUR package from `HEAD`, checks its contents, runs md-preview from it with nothing fetched |
 | `tests/test-emacs.sh`    | Emacs package: byte-compile, and `md-preview-mode` in batch Emacs |
 
 ## Not in the repository

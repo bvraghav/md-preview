@@ -1,8 +1,19 @@
 # Installing md-preview
 
-This page covers **installation from source**. The commands are for Arch
-Linux; other distributions have the same tools under the same or similar
-package names.
+**On Arch Linux**, install the AUR package:
+
+```sh
+yay -S md-preview              # or any AUR helper; or makepkg from the AUR repo
+npm install -g browser-sync    # for live reload (optional, but recommended)
+```
+
+It includes KaTeX and mermaid (no `md-preview fetch` needed), the
+documentation (`md-preview docs`), the man page, shell completion and the
+Emacs package. For Emacs setup, see [emacs/INSTALL.md](emacs/INSTALL.md).
+
+The rest of this page covers **installation from source**. The commands are
+for Arch Linux; other distributions have the same tools under the same or
+similar package names.
 
 - [1. Requirements](#1-requirements)
 - [2. Install from source](#2-install-from-source)
