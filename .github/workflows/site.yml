@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PANDOC_VERSION: "3.10.2"
+  PANDOC_VERSION: "3.11"
 
 jobs:
   build:

@@ -38,7 +38,10 @@ how the maintainer likes to work, and where things stand.
   locally. Timing races have shown up only on CI; the `serve` suite
   prints diagnostics and CI uploads the test logs when it fails.
 - Node and browser-sync come from nvm; pandoc is Arch's `pandoc-cli`,
-  which takes about 1.6 s to start.
+  which takes about 1.6 s to start. CI pins pandoc in `site.yml`
+  (`PANDOC_VERSION`); keep it at the version Arch ships, since Arch's
+  pandoc is what the package's `check()` meets. pandoc 3.11 once broke a
+  release that way (a new deprecation warning).
 
 ## Where things stand
 

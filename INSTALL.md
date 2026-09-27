@@ -71,8 +71,8 @@ makes live preview much snappier:
 # either: the AUR binary package
 yay -S pandoc-bin
 # or: the upstream static release
-curl -LO https://github.com/jgm/pandoc/releases/download/3.10.2/pandoc-3.10.2-linux-amd64.tar.gz
-tar -xzf pandoc-3.10.2-linux-amd64.tar.gz -C ~/.local --strip-components=1
+curl -LO https://github.com/jgm/pandoc/releases/download/3.11/pandoc-3.11-linux-amd64.tar.gz
+tar -xzf pandoc-3.11-linux-amd64.tar.gz -C ~/.local --strip-components=1
 ```
 
 **browser-sync** needs Node.js. If you manage Node with
@@ -159,7 +159,7 @@ md-preview doctor
 ```
 md-preview 0.2.3
 
-pandoc         pandoc 3.10.2
+pandoc         pandoc 3.11
 entr           /usr/bin/entr
 browser-sync   /home/you/.config/nvm/versions/node/v24.19.0/bin/browser-sync (3.0.4)
 share          /home/you/.local/share/md-preview

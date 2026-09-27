@@ -250,7 +250,8 @@ handles them.
 ## Math (KaTeX)
 
 Pandoc marks up math as `<span class="math inline|display">TeX</span>`
-(`--katex`). On page load, pandoc's KaTeX loader renders every span with
+(`--math-method=katex` with pandoc 3.11 or newer, `--katex` before that;
+md-preview picks the one your pandoc knows). On page load, pandoc's KaTeX loader renders every span with
 `throwOnError: false` and a single macro table shared by the whole page.
 
 | Syntax                                    | Kind    |
