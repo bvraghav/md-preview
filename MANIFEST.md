@@ -59,7 +59,7 @@ The project site, built by md-preview itself and deployed to GitHub Pages.
 | `site/source-page.sh`           | Wraps a file verbatim in a fence nothing inside can close; builds the demo's View source page |
 | `site/roundtrip.py`             | Extracts the code from a rendered source page and checks it matches the original byte for byte |
 | `.github/workflows/site.yml`    | GitHub Actions: build the site, run the regression suites, deploy to Pages on push to `main` (PRs build and test only); on a `vX.Y.Z` tag push, also the release checks, and no deploy |
-| `.github/workflows/aur.yml`     | GitHub Actions: when a release is published and its tag passed CI, update, build and check the AUR package in an Arch container, push it to the AUR, and commit the checksums back to `main`; by hand, a dry run |
+| `.github/workflows/aur.yml`     | GitHub Actions: when a release is published and its tag passed CI, update, build and check the AUR package in an Arch container, attach the PKGBUILD and package to the release, push to the AUR, and commit the checksums back to `main`; by hand, a dry run |
 
 ## Test material
 

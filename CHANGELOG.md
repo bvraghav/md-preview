@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Arch package on every release:** the `aur` workflow attaches the
+  release's `PKGBUILD` (with verified checksums) and the built, checked
+  package to the GitHub release. Installing on Arch without the AUR is now
+  `curl -LO https://github.com/bvraghav/md-preview/releases/latest/download/PKGBUILD`
+  and `makepkg -si`, or `pacman -U` on the package; INSTALL and README
+  show both.
+
 ### Changed
 
 - CI: the run list says what each run did. The `aur` job is named after its
