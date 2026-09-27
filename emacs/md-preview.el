@@ -5,7 +5,7 @@
 ;; Author: B.V. Raghav <bvraghav@gmail.com>
 ;; Assisted-by: Claude Code:claude-opus-5-5
 ;; Maintainer: B.V. Raghav <bvraghav@gmail.com>
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: tools, text, hypermedia
 ;; URL: https://github.com/bvraghav/md-preview

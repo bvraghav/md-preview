@@ -58,5 +58,6 @@ echo "bumped $OLD -> $NEW ($DATE)"
 cat <<EOF
 Next: review 'git diff', run 'make test', commit, push, wait for green, then
   git tag -a v$NEW -m "md-preview $NEW" && git push upstream v$NEW
-and publish the GitHub release; the aur workflow then updates the AUR.
+and publish the GitHub release: the aur workflow attaches the Arch package
+to it (and pushes to the AUR once that is set up; see packaging/aur/README.md).
 EOF
