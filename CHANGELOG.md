@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-09-26
+## [0.2.0] - 2026-09-27
 
 Folder mode: preview or build a whole folder of Markdown, with a file tree
 on every page and links between the files that just work.
