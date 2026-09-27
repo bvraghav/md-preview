@@ -26,6 +26,10 @@
 ;; " *md-preview: FILE*" (see `md-preview-show-log').  Killing the buffer or
 ;; disabling the mode stops the process and removes its temporary files.
 ;;
+;; `md-preview-folder' previews a whole folder instead (default: the
+;; current project's root), with a file tree on every page and links
+;; between the files working; `md-preview-folder-stop' stops it.
+;;
 ;; This package drives the `md-preview' command, which is installed
 ;; separately (Arch: the AUR package `md-preview'; elsewhere, from source).
 ;; See https://bvraghav.github.io/md-preview/install.html

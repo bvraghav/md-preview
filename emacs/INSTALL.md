@@ -4,6 +4,11 @@
 a live preview opens in your browser, refreshing on every save. Turn it off,
 or kill the buffer, and the preview stops.
 
+`M-x md-preview-folder` previews a **whole folder** instead: every Markdown
+file in it, with a file tree on each page and links between the files
+working (see [folder mode](../REFERENCE.md#folder-mode)). It defaults to
+the current project's root; `M-x md-preview-folder-stop` stops it.
+
 The package drives the **`md-preview` command**, which is installed
 separately; see [INSTALL.md](../INSTALL.md). Check it with
 `md-preview doctor` in a terminal first.
@@ -15,8 +20,10 @@ separately; see [INSTALL.md](../INSTALL.md). Check it with
 ```elisp
 (use-package md-preview
   :ensure t
-  :commands (md-preview-mode md-preview-start md-preview-stop)
-  :bind (:map markdown-mode-map ("C-c C-c p" . md-preview-mode)))
+  :commands (md-preview-mode md-preview-start md-preview-stop
+             md-preview-folder md-preview-folder-stop)
+  :bind (:map markdown-mode-map ("C-c C-c p" . md-preview-mode)
+         ("C-c C-c P" . md-preview-folder)))
 ```
 
 or `M-x package-install RET md-preview RET`. MELPA installs only the Elisp;
@@ -59,7 +66,8 @@ Without `use-package`:
 ```elisp
 (require 'md-preview)
 (with-eval-after-load 'markdown-mode
-  (define-key markdown-mode-map (kbd "C-c C-c p") #'md-preview-mode))
+  (define-key markdown-mode-map (kbd "C-c C-c p") #'md-preview-mode)
+  (define-key markdown-mode-map (kbd "C-c C-c P") #'md-preview-folder))
 ```
 
 ## Commands and options
@@ -70,6 +78,12 @@ Without `use-package`:
 | `md-preview-start/stop` | the same, as separate commands                        |
 | `md-preview-browse`     | open the running preview's URL again                  |
 | `md-preview-show-log`   | show the process output (pandoc warnings, errors)     |
+| `md-preview-folder`     | preview a folder (default: the project root); again for the same folder, reopen it in the browser |
+| `md-preview-folder-stop`| stop a folder preview, chosen among the running ones  |
+
+A folder preview's output is in the buffer ` *md-preview: DIR*`; killing
+that buffer also stops it. `md-preview-args` and the other options apply to
+folder previews too.
 
 | Option                         | Default          | Meaning |
 |--------------------------------|------------------|---------|
