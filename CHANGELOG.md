@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-27
+
 ### Fixed
 
 - **pandoc 3.11:** it deprecates `--katex`, so every page printed a
@@ -301,7 +303,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/bvraghav/md-preview/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/bvraghav/md-preview/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/bvraghav/md-preview/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bvraghav/md-preview/compare/v0.2.0...v0.2.1

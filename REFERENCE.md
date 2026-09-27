@@ -1,6 +1,6 @@
 # md-preview reference
 
-Complete interface for md-preview 0.2.3. For installation and a quick start
+Complete interface for md-preview 0.2.4. For installation and a quick start
 see [README.md](README.md).
 
 ## Command line

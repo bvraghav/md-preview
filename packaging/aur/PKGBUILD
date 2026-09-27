@@ -1,7 +1,7 @@
 # Maintainer: B.V. Raghav <bvraghav@gmail.com>
 
 pkgname=md-preview
-pkgver=0.2.3
+pkgver=0.2.4
 pkgrel=1
 _katex=0.18.9
 _mermaid=12.0.0
