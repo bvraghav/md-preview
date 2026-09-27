@@ -1,7 +1,7 @@
 # Maintainer: B.V. Raghav <bvraghav@gmail.com>
 
 pkgname=md-preview
-pkgver=0.2.1
+pkgver=0.2.2
 pkgrel=1
 _katex=0.18.9
 _mermaid=12.0.0
@@ -21,7 +21,7 @@ source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
         "katex-$_katex.tgz::https://registry.npmjs.org/katex/-/katex-$_katex.tgz"
         "mermaid-$_mermaid.min.js::https://cdn.jsdelivr.net/npm/mermaid@$_mermaid/dist/mermaid.min.js")
 noextract=("katex-$_katex.tgz")
-sha256sums=('a8bd42040d29a70f37c0fc4203e45f870123710963200338a8fb78375dcda385'
+sha256sums=('SKIP'
             '78174318fa53363e4321ac3c10b39d3598aaa73a92dc75362eb08b16f6705782'
             '28fca7ae6ebc7ed7bb63bde63136a74bfef14f296a57e403657eeb8b32836073')
 

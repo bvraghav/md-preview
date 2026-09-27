@@ -37,6 +37,7 @@ jobs:
     outputs:
       version: ${{ steps.tag.outputs.version }}
       publish: ${{ steps.tag.outputs.publish }}
+      aur_key: ${{ steps.tag.outputs.aur_key }}
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
@@ -48,6 +49,8 @@ jobs:
           PRERELEASE: ${{ github.event.release.prerelease }}
           INPUT_TAG: ${{ inputs.tag }}
           INPUT_PUBLISH: ${{ inputs.publish }}
+          # Only whether it's set: job names can't read secrets.
+          AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY != '' }}
         run: |
           if [[ $GITHUB_EVENT_NAME == release ]]; then
             tag=$RELEASE_TAG publish=true
@@ -60,7 +63,7 @@ jobs:
           fi
           [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$tag' is not a vX.Y.Z tag"; exit 1; }
           echo "$tag, publish=$publish"
-          { echo "tag=$tag"; echo "version=${tag#v}"; echo "publish=$publish"; } >> "$GITHUB_OUTPUT"
+          { echo "tag=$tag"; echo "version=${tag#v}"; echo "publish=$publish"; echo "aur_key=$AUR_KEY"; } >> "$GITHUB_OUTPUT"
 
       - name: Wait for the tag's tests and release checks
         env:
@@ -86,6 +89,11 @@ jobs:
           echo "::error::timed out waiting for the $TAG run: $link"; exit 1
 
   aur:
+    # Says in the run list what this run does with the AUR.
+    name: >-
+      ${{ needs.gate.outputs.publish != 'true' && 'Build and check (dry run)'
+          || needs.gate.outputs.aur_key == 'true' && 'Build, check and publish to the AUR'
+          || 'Build and check (AUR push off: no key)' }}
     needs: gate
     runs-on: ubuntu-latest
     container: archlinux:base-devel
@@ -97,7 +105,7 @@ jobs:
       PKG: /home/builder/pkg
     steps:
       - name: Install tools
-        run: pacman -Syu --noconfirm --needed git openssh namcap pandoc-cli entr python make
+        run: pacman -Syu --noconfirm --needed git openssh namcap pandoc-cli entr python make github-cli
 
       # main, not the tag: packaging/aur is committed back to it.
       - uses: actions/checkout@v7
@@ -120,7 +128,7 @@ jobs:
           sudo -u builder makepkg -f --noconfirm
           namcap PKGBUILD md-preview-*.pkg.tar.*
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: aur-md-preview-${{ env.V }}
           include-hidden-files: true
@@ -128,6 +136,37 @@ jobs:
             ${{ env.PKG }}/PKGBUILD
             ${{ env.PKG }}/.SRCINFO
             ${{ env.PKG }}/md-preview-*.pkg.tar.*
+
+      # PKGBUILD for `makepkg -si` (a stable link: releases/latest/download/
+      # PKGBUILD), and the checked package for `pacman -U`. Before the AUR
+      # push, so a release has them even while that's off. --clobber: re-runs.
+      - name: Attach the PKGBUILD and package to the release
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "v$V" "$PKG/PKGBUILD" "$PKG"/md-preview-*.pkg.tar.* \
+            --clobber --repo "$GITHUB_REPOSITORY"
+
+          # Assets have no description field, so say what they are in the
+          # release notes, once (the marker keeps re-runs from repeating it).
+          marker='<!-- md-preview: arch assets -->'
+          notes=$(gh release view "v$V" --repo "$GITHUB_REPOSITORY" --json body --jq .body)
+          if [[ $notes != *"$marker"* ]]; then
+            pkg=$(basename "$PKG"/md-preview-*.pkg.tar.*)
+            {
+              printf '%s\n\n' "$notes" "$marker"
+              # shellcheck disable=SC2016  # the backticks are Markdown
+              printf '%s\n' \
+                '### Arch Linux' '' \
+                '- **`PKGBUILD`**: build and install from source, as an AUR helper would:' \
+                '  `makepkg -si` in a folder containing it.' \
+                "- **\`$pkg\`**: the package CI built and checked from that PKGBUILD:" \
+                "  \`sudo pacman -U $pkg\`." '' \
+                'Details: [INSTALL.md](https://github.com/bvraghav/md-preview/blob/main/INSTALL.md#arch-linux).'
+            } > "$RUNNER_TEMP/notes.md"
+            gh release edit "v$V" --repo "$GITHUB_REPOSITORY" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
 
       - name: Push to the AUR
         if: env.PUBLISH == 'true'

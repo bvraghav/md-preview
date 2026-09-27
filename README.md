@@ -51,12 +51,13 @@ Full details are in [REFERENCE.md](REFERENCE.md).
 
 ## Setup
 
-On Arch Linux, build the package (it's not on the AUR yet):
+On Arch Linux, build the package from the latest release (it's not on the
+AUR yet):
 
 ```sh
-git clone https://github.com/bvraghav/md-preview.git && cd md-preview
-git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"   # latest release
-cd packaging/aur && makepkg -si    # KaTeX, mermaid and the docs included
+mkdir md-preview && cd md-preview
+curl -LO https://github.com/bvraghav/md-preview/releases/latest/download/PKGBUILD
+makepkg -si                        # KaTeX, mermaid and the docs included
 npm install -g browser-sync        # live reload
 md-preview doctor                  # check everything is found
 ```

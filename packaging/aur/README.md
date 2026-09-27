@@ -35,10 +35,13 @@ automatic: when the GitHub release for `vX.Y.Z` is published, the
    tag's tarball; then regenerates `.SRCINFO`;
 3. builds and checks the package with `makepkg` as a non-root user, and runs
    `namcap`;
-4. pushes `PKGBUILD` and `.SRCINFO` to
+4. attaches the `PKGBUILD` and the built package to the GitHub release, and
+   adds a short section on them to the release notes, for
+   installing without the AUR (see [INSTALL.md](../../INSTALL.md#arch-linux));
+5. pushes `PKGBUILD` and `.SRCINFO` to
    `ssh://aur@aur.archlinux.org/md-preview.git` (the first push creates the
    package);
-5. commits them back to `packaging/aur/` on `main`.
+6. commits them back to `packaging/aur/` on `main`.
 
 Pre-releases are built but not published. Each run uploads the package,
 `PKGBUILD` and `.SRCINFO` as an artifact.
@@ -47,14 +50,14 @@ Pre-releases are built but not published. Each run uploads the package,
 
 Actions → aur → Run workflow, with a tag (default: the latest release) and
 "publish" unticked: steps 1–3 only. Use it to try the pipeline, or to check
-an older tag. Ticking "publish" also does steps 4–5, e.g. for a release
+an older tag. Ticking "publish" also does steps 4–6, e.g. for a release
 published before this workflow existed.
 
 ### One-time setup
 
-Until this is done, releases still build and check the package, and commit
-its checksums back to `main`; only the push to the AUR is skipped, with a
-warning in the run.
+Until this is done, releases still build and check the package, attach it
+to the release, and commit its checksums back to `main`; only the push to
+the AUR is skipped, with a warning in the run.
 
 1. An account on <https://aur.archlinux.org>.
 2. A key pair just for this:

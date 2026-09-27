@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-27
+
+### Added
+
+- **Arch package on every release:** the `aur` workflow attaches the
+  release's `PKGBUILD` (with verified checksums) and the built, checked
+  package to the GitHub release. Installing on Arch without the AUR is now
+  `curl -LO https://github.com/bvraghav/md-preview/releases/latest/download/PKGBUILD`
+  and `makepkg -si`, or `pacman -U` on the package; INSTALL and README
+  show both.
+  The release notes get a short "Arch Linux" section saying what the two
+  files are.
+
+### Changed
+
+- CI: the run list says what each run did. The `aur` job is named after its
+  outcome ("publish to the AUR", "AUR push off: no key", or "dry run"),
+  and the site's deploy job reads "deploy (main only)", so it's clear why
+  it's skipped on pull requests. `actions/upload-artifact` is now v7 (Node
+  24; v5 ran on the deprecated Node 20).
+
 ## [0.2.1] - 2026-09-27
 
 Release pipeline: one command prepares a release, and publishing it builds
@@ -241,7 +262,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/bvraghav/md-preview/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bvraghav/md-preview/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bvraghav/md-preview/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bvraghav/md-preview/compare/v0.0.3...v0.1.0

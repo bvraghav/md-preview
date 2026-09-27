@@ -9,14 +9,14 @@ have the same tools under the same or similar package names.
 
 md-preview isn't on the AUR yet. Its package is ready, but registration
 for new AUR accounts is closed for now, so it can't be published. Until
-then, build that same package yourself with `makepkg`, from the PKGBUILD
-in this repository:
+then, every [release](https://github.com/bvraghav/md-preview/releases)
+carries that same package, in two forms.
+
+**Build it** from the release's `PKGBUILD`, as an AUR helper would:
 
 ```sh
-git clone https://github.com/bvraghav/md-preview.git
-cd md-preview
-git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"   # the latest release
-cd packaging/aur
+mkdir md-preview && cd md-preview
+curl -LO https://github.com/bvraghav/md-preview/releases/latest/download/PKGBUILD
 makepkg -si                     # build, check and install (asks for sudo)
 npm install -g browser-sync     # for live reload (optional, but recommended)
 md-preview doctor               # check everything is found
@@ -25,25 +25,24 @@ md-preview doctor               # check everything is found
 - **`-s`** installs what the build needs with pacman (`pandoc-cli`,
   `entr`, `make`, `python`); **`-i`** installs the package.
 - **It takes a little while** (under a minute on most machines):
-  makepkg downloads the release, KaTeX and mermaid (a few MB), builds the
-  documentation website with pandoc, then renders the demo as a check.
-  That's what lets the package work offline, with no `md-preview fetch`.
-- **Checksums:** KaTeX and mermaid are verified. md-preview's own tarball
-  shows as "Skipped" at a release tag: its checksum only exists once
-  GitHub serves the tag, and CI adds it to `main` afterwards.
+  makepkg downloads the release, KaTeX and mermaid (a few MB) and checks
+  them against the PKGBUILD's checksums, builds the documentation website
+  with pandoc, then renders the demo as a check. That's what lets the
+  package work offline, with no `md-preview fetch`.
 
-To upgrade, from the clone:
+**Or install the built package**, `md-preview-X.Y.Z-1-any.pkg.tar.zst`
+from the same release, which CI built and checked from that PKGBUILD:
 
 ```sh
-git fetch --tags
-git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"
-cd packaging/aur && makepkg -si
+sudo pacman -U md-preview-X.Y.Z-1-any.pkg.tar.zst
 ```
 
-To remove it: `sudo pacman -R md-preview`.
+pacman then installs `pandoc-cli` and `entr` if they're missing.
 
-Once it's on the AUR, `yay -S md-preview` (or any AUR helper) does the
-same. pacman sees it as the same package, so nothing needs undoing first.
+To upgrade, do the same with the new release. To remove it:
+`sudo pacman -R md-preview`. Once it's on the AUR, `yay -S md-preview` (or
+any AUR helper) does the same; pacman sees it as the same package, so
+nothing needs undoing first.
 
 The package includes KaTeX and mermaid, the documentation
 (`md-preview docs`), the man page, shell completion and the Emacs package.
@@ -158,7 +157,7 @@ md-preview doctor
 ```
 
 ```
-md-preview 0.2.1
+md-preview 0.2.2
 
 pandoc         pandoc 3.10.2
 entr           /usr/bin/entr
