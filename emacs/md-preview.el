@@ -3,6 +3,7 @@
 ;; Copyright (C) 2026 B.V. Raghav
 
 ;; Author: B.V. Raghav <bvraghav@gmail.com>
+;; Assisted-by: Claude Code:claude-opus-5-5
 ;; Maintainer: B.V. Raghav <bvraghav@gmail.com>
 ;; Version: 0.2.1
 ;; Package-Requires: ((emacs "27.1"))
