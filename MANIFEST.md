@@ -11,7 +11,7 @@ Every file in the repository and what it does.
 | `REFERENCE.md`  | Complete reference: CLI, environment, dialect, math, diagrams, template, filter, Emacs API |
 | `MANIFEST.md`   | This file |
 | `CHANGELOG.md`  | Release history (Keep a Changelog format) |
-| `VERSION`       | Current version, read by the script at runtime (`0.2.1`) |
+| `VERSION`       | Current version, read by the script at runtime (`0.2.2`) |
 | `LICENSE`       | MIT license |
 | `CONTRIBUTING.md` | Working on md-preview, and the release checklist |
 | `TODO.md`       | Roadmap: the intent and the agreed plan for upcoming releases |
