@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+Release pipeline: one command prepares a release, and publishing it updates
+the AUR package.
+
+### Added
+
+- `make bump V=X.Y.Z`: sets every copy of the version (the ones the release
+  checks verify, and the AUR PKGBUILD), and turns `[Unreleased]` into a
+  dated CHANGELOG section with its compare link.
+- **AUR publishing from CI:** when a GitHub release is published and its
+  tag passed CI, the `aur` workflow updates the PKGBUILD's checksums (and
+  KaTeX and mermaid versions) with `packaging/aur/update.sh`, builds and
+  checks the package in an Arch Linux container, pushes it to the AUR, and
+  commits the result back to `main`. Run by hand, it's a dry run.
+
 ## [0.2.0] - 2026-09-27
 
 Folder mode: preview or build a whole folder of Markdown, with a file tree

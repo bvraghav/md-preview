@@ -11,7 +11,7 @@ make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
-At 0.2.0 all nine pass: **439 checks**, about 2½ minutes. CI runs fewer:
+At 0.2.1 all nine pass: **456 checks**, about 2½ minutes. CI runs fewer:
 `emacs` and `aur` don't run there, and the zsh and nvm-fallback checks
 don't apply on the runner.
 
@@ -23,8 +23,8 @@ don't apply on the runner.
 | `site` | 92 | the website: page set, link rewriting, every `#anchor` link lands (`anchors.py`), frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
 | `serve` | 56 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback; for a folder: edits, new and deleted files, a file in a new subfolder, a folder created empty and filled later, a broken page, cleanup | entr, browser-sync |
 | `browser` | 43 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
-| `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
-| `aur` | 25 | builds the AUR package from a tarball of `HEAD` (checks run inside), checks its contents, and runs md-preview from the unpacked package with nothing fetched: packaged KaTeX and mermaid, `docs` from `/usr/share/doc`, the man page; `.SRCINFO` matches the PKGBUILD | makepkg (Arch; not on CI) |
+| `release` | 21 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; `make bump` on a copy leaves a tree that passes these checks, and refuses bad versions; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
+| `aur` | 32 | `update.sh` for the released tag (pkgver, pinned KaTeX/mermaid, real checksums that verify); builds the AUR package from a tarball of `HEAD` (checks run inside), checks its contents, and runs md-preview from the unpacked package with nothing fetched: packaged KaTeX and mermaid, `docs` from `/usr/share/doc`, the man page; `.SRCINFO` matches the PKGBUILD | makepkg (Arch; not on CI) |
 | `emacs` | 26 | the Emacs package byte-compiles cleanly and passes `checkdoc` and `package-lint` (MELPA's checks) with a full header; a missing `md-preview` command gives a helpful error and leaves the mode off; the URL is parsed from coloured output; `md-preview-mode` and `md-preview-folder` start, report their URL and stop cleanly | emacs (package-lint is fetched from MELPA) |
 
 A suite whose tools are missing is **skipped, not failed**. GitHub
