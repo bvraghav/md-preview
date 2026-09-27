@@ -112,6 +112,7 @@ cp -r "$ROOT/tests/folder-sample" "$F"
 printf '<html><body>FOLDER-INDEX</body></html>\n' > "$F/index.html"
 st() { curl -s -o /dev/null -w '%{http_code}' "http://localhost:$PORT/$1"; }
 gets() { [[ $(st "$1") == "$2" ]]; }
+fail0=$FAIL
 if TARGET=$F start; then
   ok "folder preview starts"
   check "/ is the README's page"          has 'Folder sample'
@@ -135,6 +136,13 @@ if TARGET=$F start; then
   printf -- '---\ntitle: [bad\n---\n' > "$F/guide/advanced.md"
   check "a broken page shows its error"   wait_for 30 bash -c "curl -s http://localhost:$PORT/guide/advanced.html | grep -q '<h1>pandoc failed'"
   dir=$(ls -d "$W"/run/md-preview.* 2>/dev/null | head -1)
+  # A failure above that only CI has seen: show what the preview was doing.
+  if (( FAIL > fail0 )); then
+    echo "     GET / -> $(status '')"
+    echo "     processes:"; ps -o pid,stat,etime,args --forest -s "$PID" | cut -c1-160 | sed 's/^/       /'
+    echo "     pages:"; (cd "$dir" 2>/dev/null && find . -name '*.html' -newer "$F/README.md") | sed 's/^/       /'
+    echo "     log:"; sed 's/^/       /' "$LOG"
+  fi
   stop
   refute "stopped: temp directory removed" test -e "$dir"
   check "  no entr left behind"           gone "entr .*$F"

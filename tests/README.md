@@ -86,6 +86,16 @@ In 0.2.0, the folder-mode tests found:
   user): hand-written contents lists linked `#6-emacs`, GitHub's anchor
   for "6. Emacs", but pandoc makes it `#emacs`. `anchors.py` found all 8
   such links, on the site's pages and from README to INSTALL.
+- **The folder watcher could die silently** (found on CI): when entr had
+  already exited on its own (`-d`, a new folder) and the 2 s poll then saw
+  a new file, killing the gone entr failed, and `set -e` ended the watcher.
+  Nothing rebuilt after that. The serve suite now prints the preview's
+  processes and log when a folder check fails, and CI uploads the test logs.
+- **A save during a rename-save's render was lost** (since 0.1.0): after
+  entr exited on the rename, the loop rendered, then started entr with
+  `-p`, which skips its first run. Now entr itself renders on start when the
+  source changed. Found by the "burst of saves" check, which failed about
+  one run in three locally.
 - **Mistakes in the tests themselves**, each caught and fixed while
   writing them:
   - (0.2.0) a `for f in $(find …)` loop in a check split "My Notes.html",

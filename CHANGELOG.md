@@ -58,6 +58,9 @@ on every page and links between the files that just work.
   (`#emacs`). The lists are gone (every page has the automatic TOC, now
   README too), INSTALL's headings are unnumbered, and the site suite checks
   that every `#anchor` link on the site lands.
+- **Live preview could miss a save:** a save made while md-preview was
+  re-rendering after an editor's rename-style save (a backup file) didn't
+  show up until the next save.
 
 ## [0.1.0] - 2026-09-26
 

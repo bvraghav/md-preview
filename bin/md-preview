@@ -568,7 +568,9 @@ cmd_serve() {
         "$SELF" _folder_build "$src" "$dir" serve "${pass[@]}" 2>&1 | grep -v 'updated 0 of' >&2 || true
         while kill -0 "$entr_pid" 2>/dev/null; do
           sleep 2
-          [[ $(folder_sources "$src" "$dir") == "$list" ]] || { kill "$entr_pid" 2>/dev/null; break; }
+          # entr may have exited already (-d): kill failing must not end the
+          # loop under set -e.
+          [[ $(folder_sources "$src" "$dir") == "$list" ]] || { kill "$entr_pid" 2>/dev/null || true; break; }
         done
         wait "$entr_pid" 2>/dev/null || true
         sleep 0.3
@@ -582,13 +584,14 @@ cmd_serve() {
     # Watch the source plus our own share files (handy when tweaking styles).
     # entr exits when a watched file is replaced (editors saving via rename)
     # or when -d sees a new file in the directory (backups, lock files); just
-    # restart it, re-rendering first if the source changed in the meantime.
+    # restart it. If the source changed in the meantime, entr renders as soon
+    # as it starts (no -p), so a save during that render isn't lost either.
     (
       while :; do
         if [[ ! -e $src ]]; then sleep 0.2; continue; fi
-        if [[ $src -nt $dir/.stamp ]]; then "$SELF" _render "$src" "$dir" "${pass[@]}"; fi
+        p=p; if [[ $src -nt $dir/.stamp ]]; then p=''; fi
         printf '%s\n' "$src" "${share_files[@]}" |
-          entr -adnp "$SELF" _render "$src" "$dir" "${pass[@]}" || true
+          entr -adn$p "$SELF" _render "$src" "$dir" "${pass[@]}" || true
         sleep 0.1
       done
     ) &
