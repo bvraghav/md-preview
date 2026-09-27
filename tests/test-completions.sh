@@ -24,6 +24,8 @@ eq "serve: Markdown files and dirs only"    "a.md b.markdown sub " "$(comp md-pr
 eq "serve options"                          "--no-open " "$(comp md-preview serve --n)"
 eq "default command takes serve options"    "--listen " "$(comp md-preview --l)"
 eq "build options"                          "--embed " "$(comp md-preview build --e)"
+eq "build --force (folders)"                "--force " "$(comp md-preview build --f)"
+eq "build --base-url (folders)"             "--base-url " "$(comp md-preview build --b)"
 eq "--assets takes a directory"             "sub " "$(comp md-preview build --assets '')"
 eq "docs: options only"                     "--browser --no-open --port " "$(comp md-preview docs --)"
 eq "docs: no files"                         "" "$(comp md-preview docs '')"

@@ -1,6 +1,6 @@
 # Regression tests
 
-Eight suites with a Makefile. From the repository root:
+Nine suites with a Makefile. From the repository root:
 
 ```sh
 make test                   # all suites (same as: make -C tests)
@@ -11,20 +11,21 @@ make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
-At 0.1.0 all eight pass: **326 checks**, about 2 minutes. CI runs fewer:
+At 0.2.0 all nine pass: **439 checks**, about 2½ minutes. CI runs fewer:
 `emacs` and `aur` don't run there, and the zsh and nvm-fallback checks
 don't apply on the runner.
 
 | Suite | Checks | Covers | Needs |
 |---|---|---|---|
 | `build` | 78 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
-| `completions` | 40 | bash completion called directly; zsh completion in a real interactive zsh (driven through `zsh/zpty` by `zcomp.zsh`); the man page builds and has every section | zsh, pandoc, man |
-| `site` | 73 | the website: page set, link rewriting, frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
-| `serve` | 37 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback | entr, browser-sync |
-| `browser` | 42 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
+| `folder` | 66 | folder mode on `tests/folder-sample`: the page set, README/index/listing pages, link rewriting (`../`, anchors, folders, spaces), assets relative to depth, the file tree (current page, open folders), titles, incremental rebuilds (edit, add, remove, `--force`), a broken page, options, user-filter order, single files unchanged | pandoc |
+| `completions` | 42 | bash completion called directly; zsh completion in a real interactive zsh (driven through `zsh/zpty` by `zcomp.zsh`); the man page builds and has every section | zsh, pandoc, man |
+| `site` | 92 | the website: page set, link rewriting, every `#anchor` link lands (`anchors.py`), frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |
+| `serve` | 56 | live preview: served assets, localhost-only binding, in-place, rename-style, rapid and mid-render saves, three error→fix cycles, browser reloads, cleanup on SIGTERM, the nvm fallback; for a folder: edits, new and deleted files, a file in a new subfolder, a folder created empty and filled later, a broken page, cleanup | entr, browser-sync |
+| `browser` | 43 | the site in headless Chromium: KaTeX and mermaid actually render, images, anchors, copy buttons, TOC layout, highlight and toggle, the navbar dropdown, line numbers | chromium or Chrome |
 | `release` | 11 | every copy of the version (`VERSION`, the Elisp header, REFERENCE, README, MANIFEST) agrees, and the CHANGELOG has a dated section and links for it; with `TAG=vX.Y.Z`, the tag matches and points at the tested commit | nothing |
 | `aur` | 25 | builds the AUR package from a tarball of `HEAD` (checks run inside), checks its contents, and runs md-preview from the unpacked package with nothing fetched: packaged KaTeX and mermaid, `docs` from `/usr/share/doc`, the man page; `.SRCINFO` matches the PKGBUILD | makepkg (Arch; not on CI) |
-| `emacs` | 20 | the Emacs package byte-compiles cleanly and passes `checkdoc` and `package-lint` (MELPA's checks) with a full header; a missing `md-preview` command gives a helpful error and leaves the mode off; the URL is parsed from coloured output; `md-preview-mode` starts, reports its URL and stops cleanly | emacs (package-lint is fetched from MELPA) |
+| `emacs` | 26 | the Emacs package byte-compiles cleanly and passes `checkdoc` and `package-lint` (MELPA's checks) with a full header; a missing `md-preview` command gives a helpful error and leaves the mode off; the URL is parsed from coloured output; `md-preview-mode` and `md-preview-folder` start, report their URL and stop cleanly | emacs (package-lint is fetched from MELPA) |
 
 A suite whose tools are missing is **skipped, not failed**. GitHub
 Actions runs `build`, `site`, `browser` and `serve` on every push and pull
@@ -37,8 +38,8 @@ there as a quick smoke test.
   that highlights the section you're reading; narrower, it's a collapsible
   box below the title. It remembers whether you left it open, and appears
   only when a page has 3+ headings; `md-preview-toc: false` or
-  `MD_PREVIEW_TOC` overrides that. The site turns it off for README, which
-  has its own Contents.
+  `MD_PREVIEW_TOC` overrides that. (The site turned it off for README,
+  which had its own Contents, until 0.2.0 removed the hand-written lists.)
 - **Anchors and copy buttons:** `#` links on headings and a Copy button on
   every code block, from one new file, `share/md-preview/md-preview.js`.
 - **View Source:** the demo links to `demo-source.html`, which md-preview
@@ -60,8 +61,45 @@ there as a quick smoke test.
   `.numberLines` code blocks.
 - **pandoc's styles overrode ours:** its syntax-highlighting CSS loaded
   after md-preview's stylesheet. It now loads first.
+- **A folder's `index.html` replaced the preview** (0.1.0, reported by a
+  user): browser-sync tries `--serveStatic` folders first. The serve suite's
+  document folder now always has an `index.html`.
+- **Deep links landed in the wrong place** on pages with diagrams (0.1.0):
+  found when the TOC-highlight probe failed on the slower CI runner.
+
+In 0.2.0, the folder-mode tests found:
+
+- **A file in a new subfolder was never picked up**, when it appeared while
+  the watcher was rebuilding: the file list was taken after the build, so it
+  already included the new file that the build hadn't seen.
+- **A save during a folder build was lost**: a page rendered from the old
+  text came out newer than its source, and entr wasn't running yet. Pages
+  now carry their source's mtime from before rendering, and entr starts
+  before each build.
+- **Every folder build after the first hung**: the serve process kept the
+  build lock's file descriptor open. Found when the serve suite took over
+  ten minutes instead of one.
+- **The site's stylesheet stopped overriding md-preview's**, after user
+  options were moved before md-preview's own; the preview bar would have
+  shown on the website. The browser suite now checks the bar is hidden.
+- **Section links on the website that went nowhere** (reported by a
+  user): hand-written contents lists linked `#6-emacs`, GitHub's anchor
+  for "6. Emacs", but pandoc makes it `#emacs`. `anchors.py` found all 8
+  such links, on the site's pages and from README to INSTALL.
+- **The folder watcher could die silently** (found on CI): when entr had
+  already exited on its own (`-d`, a new folder) and the 2 s poll then saw
+  a new file, killing the gone entr failed, and `set -e` ended the watcher.
+  Nothing rebuilt after that. The serve suite now prints the preview's
+  processes and log when a folder check fails, and CI uploads the test logs.
+- **A save during a rename-save's render was lost** (since 0.1.0): after
+  entr exited on the rename, the loop rendered, then started entr with
+  `-p`, which skips its first run. Now entr itself renders on start when the
+  source changed. Found by the "burst of saves" check, which failed about
+  one run in three locally.
 - **Mistakes in the tests themselves**, each caught and fixed while
   writing them:
+  - (0.2.0) a `for f in $(find …)` loop in a check split "My Notes.html",
+    the very file name that's there to catch that bug in md-preview
   - `pgrep -f` inside `bash -c` matched that shell's own command line
   - `-- ARGS` placed before `-o` sent the output option to pandoc
   - a check for `class="mdp-frontmatter"` matched REFERENCE.md, which

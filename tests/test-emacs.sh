@@ -81,4 +81,37 @@ eq "process stopped"         nil "$(val live)"
 eq "stopped by SIGTERM"      143 "$(val exit)"
 check "temp directory removed" bash -c "[ -z \"\$(ls -A '$W/run')\" ]"
 
+echo "== md-preview-folder"
+cp -r "$ROOT/tests/folder-sample" "$W/folder"
+port=$(free_port)
+cat > "$W/folder.el" <<EOF
+;;; -*- lexical-binding: t -*-
+(add-to-list 'load-path "$ROOT/emacs")
+(require 'md-preview)
+(setq md-preview-program "$MDP"
+      md-preview-args '("--no-open" "--port" "$port")
+      md-preview-environment '("MD_PREVIEW_DATA=$MD_PREVIEW_DATA" "XDG_RUNTIME_DIR=$W/run"))
+(md-preview-folder "$W/folder")
+(let* ((dir (file-name-as-directory "$W/folder"))
+       (p (gethash dir md-preview--folders)) (n 0))
+  (while (and (< n 300) (process-live-p p) (not (process-get p 'md-preview-url)))
+    (accept-process-output p 0.1) (setq n (1+ n)))
+  (princ (format "url=%s\n" (process-get p 'md-preview-url)))
+  (princ (format "page=%s\n" (with-temp-buffer
+                                (call-process "curl" nil t nil "-s" (format "http://localhost:$port/"))
+                                (if (search-backward "mdp-tree" nil t) "tree" "none"))))
+  (md-preview-folder-stop dir)
+  (setq n 0)
+  (while (and (< n 60) (process-live-p p)) (accept-process-output p 0.1) (setq n (1+ n)))
+  (princ (format "live=%s\nexit=%s\nregistered=%s\n" (process-live-p p) (process-exit-status p)
+                 (hash-table-count md-preview--folders))))
+EOF
+out=$(emacs -Q --batch -l "$W/folder.el" 2>/dev/null)
+eq "URL reported"            "http://localhost:$port" "$(val url)"
+eq "serves the folder, with its tree" tree "$(val page)"
+eq "stopped"                 nil "$(val live)"
+eq "stopped by SIGTERM"      143 "$(val exit)"
+eq "no longer registered"    0 "$(val registered)"
+check "temp directory removed" bash -c "[ -z \"\$(ls -A '$W/run')\" ]"
+
 finish

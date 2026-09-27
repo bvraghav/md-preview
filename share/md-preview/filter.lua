@@ -12,6 +12,7 @@
 --   md-preview-toc          true | false; unset = automatic (3+ headings)
 -- Metadata written:
 --   md-preview-has-mermaid        true when the document contains a mermaid block
+--   md-preview-tree-html          folder mode: the file tree <nav>
 --   md-preview-frontmatter-html   the rendered frontmatter <details> block
 --   md-preview-toc-show           true when the template should show the TOC
 
@@ -112,12 +113,169 @@ local function toc_show(doc)
   return n >= TOC_MIN_HEADINGS
 end
 
-local function Pandoc(doc)
-  local meta = doc.meta
-  if not FORMAT:match('html') then return nil end
+-- ------------------------------------------------------------ folder mode ---
+--
+-- Set by `md-preview build DIR` / `serve DIR` for each page:
+--   md-preview-page       this page's source, relative to the folder
+--                         ("a/b.md"), or "a/" for a generated listing
+--   md-preview-tree-file  the folder's tree (see folder_tree in the script):
+--                         P<tab>source<tab>page, D<tab>folder<tab>index
+--   md-preview-root-name  the folder's name, for the top of the tree
+--   md-preview-tree       false hides the file tree (default: shown)
 
-  if not meta.title and not meta.pagetitle and meta['md-preview-file'] then
-    meta.pagetitle = meta['md-preview-file']
+local function split_path(p)
+  local t = {}
+  for seg in p:gmatch('[^/]+') do if seg ~= '.' then t[#t + 1] = seg end end
+  return t
+end
+
+-- "a/b" + "../c/d.md" -> "a/c/d.md"; nil if it leaves the folder
+local function resolve(dir, path)
+  local out = {}
+  for _, seg in ipairs(split_path(dir .. '/' .. path)) do
+    if seg == '..' then
+      if #out == 0 then return nil end
+      table.remove(out)
+    else
+      out[#out + 1] = seg
+    end
+  end
+  return #out == 0 and '.' or table.concat(out, '/')
+end
+
+-- relative link from folder FROM to file TO (both relative to the root)
+local function relpath(from, to)
+  local a, b = split_path(from), split_path(to)
+  local i = 1
+  while i <= #a and i < #b and a[i] == b[i] do i = i + 1 end
+  return ('../'):rep(#a - i + 1) .. table.concat(b, '/', i)
+end
+
+local function url_decode(s)
+  return (s:gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end))
+end
+local function url_encode(s)
+  return (s:gsub('[%%%s#?"]', function(c) return string.format('%%%02X', c:byte()) end))
+end
+
+local function read_tree(path)
+  local f = io.open(path, 'r')
+  if not f then return nil end
+  local tree = { pages = {}, dirs = {}, entries = {} }
+  for line in f:lines() do
+    local kind, a, b = line:match('^(%a)\t([^\t]*)\t?(.*)$')
+    if kind == 'P' then tree.pages[a] = b; tree.entries[#tree.entries + 1] = { kind = 'P', src = a, page = b }
+    elseif kind == 'D' then tree.dirs[a] = b; tree.entries[#tree.entries + 1] = { kind = 'D', src = a, page = b }
+    end
+  end
+  f:close()
+  return tree
+end
+
+local function parent_of(p) return p:match('^(.*)/[^/]*$') or '.' end
+
+-- Rewrite relative links to Markdown files (and folders) in the folder to
+-- the pages they become, relative to this page.
+local function rewrite_links(doc, tree, pagedir)
+  return doc:walk {
+    Link = function(link)
+      local t = link.target
+      if t:match('^%a[%w+.-]*:') or t:match('^//') or t:match('^#') then return nil end
+      local path, frag = t:match('^([^#?]*)(.*)$')
+      if path == '' then return nil end
+      local target = resolve(pagedir, url_decode(path))
+      if not target then return nil end
+      local page = tree.pages[target] or tree.dirs[target]
+      if not page then return nil end
+      link.target = url_encode(relpath(pagedir, page)) .. frag
+      return link
+    end,
+  }
+end
+
+-- (parenthesised: gsub also returns a count, which would shift format args)
+local function esc(s) return (html_escape(s):gsub('"', '&quot;')) end
+
+-- The file tree as HTML: folders (with their index) and pages, the current
+-- page marked, folders on its path open.
+local function tree_html(tree, current_page, pagedir, root_name)
+  local children = {}
+  local function add(parent, entry)
+    children[parent] = children[parent] or {}
+    table.insert(children[parent], entry)
+  end
+  for _, e in ipairs(tree.entries) do
+    if e.kind == 'D' and e.src ~= '.' then add(parent_of(e.src), e)
+    elseif e.kind == 'P' and e.page ~= tree.dirs[parent_of(e.src)] then add(parent_of(e.src), e)
+    end
+  end
+  local function sorted(list)
+    table.sort(list, function(x, y)
+      if x.kind ~= y.kind then return x.kind == 'D' end
+      return x.src:lower() < y.src:lower()
+    end)
+    return list
+  end
+  local function href(page) return esc(url_encode(relpath(pagedir, page))) end
+  local function current(page) return page == current_page and ' aria-current="page"' or '' end
+  local function render(dir)
+    local items = {}
+    for _, e in ipairs(sorted(children[dir] or {})) do
+      local name = esc(e.src:match('[^/]+$'))
+      if e.kind == 'D' then
+        local open = (current_page:sub(1, #e.src + 1) == e.src .. '/') and ' open' or ''
+        items[#items + 1] = string.format(
+          '<li class="mdp-tree-dir"><details%s><summary><a href="%s"%s>%s/</a></summary>%s</details></li>',
+          open, href(e.page), current(e.page), name, render(e.src))
+      else
+        items[#items + 1] = string.format('<li><a href="%s"%s>%s</a></li>',
+          href(e.page), current(e.page), (name:gsub('%.[^.]+$', '')))
+      end
+    end
+    return #items > 0 and ('<ul>' .. table.concat(items) .. '</ul>') or ''
+  end
+  return string.format(
+    '<nav class="mdp-tree" aria-label="Files"><details open><summary>Files</summary>'
+      .. '<div class="mdp-tree-body"><a class="mdp-tree-root" href="%s"%s>%s/</a>%s</div></details></nav>',
+    href(tree.dirs['.']), current(tree.dirs['.']), esc(root_name), render('.'))
+end
+
+local function folder_mode(doc)
+  local meta = doc.meta
+  local page = meta['md-preview-page'] and stringify(meta['md-preview-page'])
+  local tree_file = meta['md-preview-tree-file'] and stringify(meta['md-preview-tree-file'])
+  if not page or not tree_file then return doc end
+  local tree = read_tree(tree_file)
+  if not tree then return doc end
+  local pagedir = page:match('/$') and page:gsub('/$', '') or parent_of(page)
+  if pagedir == '' then pagedir = '.' end
+  local current_page = page:match('/$') and tree.dirs[pagedir] or tree.pages[page]
+  doc = rewrite_links(doc, tree, pagedir)
+  local show = meta['md-preview-tree']
+  if not (show == false or (show ~= nil and stringify(show) == 'false')) then
+    local root_name = meta['md-preview-root-name'] and stringify(meta['md-preview-root-name']) or '.'
+    doc.meta['md-preview-tree-html'] = pandoc.MetaBlocks {
+      pandoc.RawBlock('html', tree_html(tree, current_page or '', pagedir, root_name)) }
+  end
+  return doc
+end
+
+-- The first level-1 heading, as plain text, if any.
+local function first_h1(doc)
+  for _, b in ipairs(doc.blocks) do
+    if b.t == 'Header' and b.level == 1 then return stringify(b.content) end
+  end
+end
+
+local function Pandoc(doc)
+  if not FORMAT:match('html') then return nil end
+  doc = folder_mode(doc)
+  local meta = doc.meta
+
+  if not meta.title and not meta.pagetitle then
+    local h1 = first_h1(doc)
+    if h1 and h1 ~= '' then meta.pagetitle = h1
+    elseif meta['md-preview-file'] then meta.pagetitle = meta['md-preview-file'] end
   end
 
   -- Handed to the template as a variable so it can sit above the title block.

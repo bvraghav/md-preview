@@ -11,8 +11,8 @@ md-preview - live browser preview of Markdown with frontmatter, mermaid and KaTe
 
 # SYNOPSIS
 
-**md-preview** [**serve**] [*options*] *FILE.md* [**\-\-** *pandoc-args*...]\
-**md-preview build** [*options*] *FILE.md* [**\-\-** *pandoc-args*...]\
+**md-preview** [**serve**] [*options*] *FILE.md*|*DIR* [**\-\-** *pandoc-args*...]\
+**md-preview build** [*options*] *FILE.md*|*DIR* [**\-\-** *pandoc-args*...]\
 **md-preview fetch** [**\-\-force**]\
 **md-preview assets** *DIR*\
 **md-preview docs** [*options*]\
@@ -31,16 +31,23 @@ keys), KaTeX math (**\$\...\$**, **\$\$\...\$\$**, **\\(\...\\)**,
 diagrams (fenced **mermaid** blocks), GitHub-style alerts, an automatic
 table of contents, heading anchors and copy buttons on code blocks.
 
+Given a folder, **md-preview** works on every Markdown file in it: each
+becomes a page (a folder's *README.md* its *index.html*), links between them
+are rewritten to the pages, and every page gets a file tree.
+
 The complete reference, with examples, is served by **md-preview docs**.
 
 # COMMANDS
 
-**serve** *FILE.md*
+**serve** *FILE.md*|*DIR*
 :   Live preview; the default when the first argument is not a command.
-    Runs until interrupted, then removes its temporary files.
+    Runs until interrupted, then removes its temporary files. For a folder,
+    a save re-renders just that page, and new or removed files update the
+    file tree.
 
-**build** *FILE.md*
-:   Render once to HTML and exit.
+**build** *FILE.md*|*DIR*
+:   Render once to HTML and exit. A folder is rendered to a folder of pages
+    (default *DIR/_site*), incrementally and in parallel.
 
 **fetch**
 :   Download KaTeX and mermaid into *\$MD_PREVIEW_DATA/vendor* for offline
@@ -88,7 +95,13 @@ The complete reference, with examples, is served by **md-preview docs**.
 
 **\-\-assets** *PREFIX*
 :   Link the stylesheet, KaTeX and mermaid relative to *PREFIX/*, for
-    publishing; lay them out with **md-preview assets**.
+    publishing; lay them out with **md-preview assets**. Single files only.
+
+**\-\-force**
+:   Folders: render every page, not only those whose source changed.
+
+**\-\-base-url** *URL*
+:   Folders: also write *sitemap.xml*, for a site published at *URL*.
 
 ## docs
 
@@ -136,6 +149,15 @@ Arguments after **\-\-** are passed to pandoc, for example
 **MD_PREVIEW_KATEX_VERSION**, **MD_PREVIEW_MERMAID_VERSION**
 :   Versions for **fetch** and the CDN fallback.
 
+**MD_PREVIEW_JOBS**
+:   Pages a folder build renders at once (default: the number of CPUs).
+
+**MD_PREVIEW_STATE**
+:   Where a folder build keeps its state (default *OUT/.md-preview*).
+
+**MD_PREVIEW_BASE_URL**
+:   Default for **build \-\-base-url**.
+
 **MD_PREVIEW_DOCS**, **MD_PREVIEW_DOCS_PORT**, **MD_PREVIEW_DOCS_SERVER**
 :   Site directory, port, and server (**auto**, **browser-sync** or
     **python**) for **docs**.
@@ -164,6 +186,8 @@ when **serve** is stopped by SIGINT or SIGTERM.
 # EXAMPLES
 
     md-preview notes.md
+    md-preview ~/notes                      # a whole folder
+    md-preview build ~/notes -o ~/notes-html
     md-preview serve --port 4000 --browser firefox notes.md
     md-preview build --embed notes.md -o notes.html
     md-preview docs

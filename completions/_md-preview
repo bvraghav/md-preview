@@ -23,13 +23,15 @@ build_opts=(
   '(-o --output)'{-o,--output}'[output file]:output file:_files'
   '(--assets)--embed[self-contained HTML]'
   '(--embed)--assets[link assets relative to a prefix]:prefix:_directories'
+  '--force[folders: render every page]'
+  '--base-url[folders: write sitemap.xml for a site at this URL]:URL: '
 )
 docs_opts=(
   '(-p --port)'{-p,--port}'[port]:port: '
   '(-b --browser)'{-b,--browser}'[browser to open]:browser:(firefox chromium google-chrome)'
   '--no-open[do not open a browser]'
 )
-local markdown='*:Markdown file:_files -g "*.(md|markdown)(-.)"'
+local markdown='*:Markdown file or folder:_files -g "*.(md|markdown)(-.)"'
 
 local curcontext=$curcontext state line ret=1
 _arguments -C '1: :->first' '*:: :->rest' && ret=0

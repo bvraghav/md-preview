@@ -22,6 +22,7 @@
       copy_buttons: document.querySelectorAll('.mdp-copy').length,
       code_blocks: document.querySelectorAll('main pre > code').length,
       toc_position: toc ? getComputedStyle(toc).position : 'none',
+      bar_display: getComputedStyle(document.querySelector('.mdp-bar')).display,
       toc_open: toc ? toc.querySelector('details').open : 'none'
     });
   }

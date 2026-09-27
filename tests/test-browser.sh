@@ -58,6 +58,7 @@ eq "an anchor per heading"                   "$(val headings)" "$(val anchors)"
 eq "a copy button per code block"            "$(val code_blocks)" "$(val copy_buttons)"
 eq "TOC is a fixed sidebar"                  fixed "$(val toc_position)"
 eq "TOC sidebar open by default"             true "$(val toc_open)"
+eq "site.css overrides style.css (bar hidden)" none "$(val bar_display)"
 
 echo "== demo.html (800px)"
 probe demo.html render 800

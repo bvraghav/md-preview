@@ -21,7 +21,7 @@ _md_preview() {
   done
 
   case $prev in
-    -p|--port|--listen) return 0 ;;
+    -p|--port|--listen|--base-url) return 0 ;;
     -b|--browser)
       mapfile -t COMPREPLY < <(compgen -W 'firefox chromium google-chrome' -- "$cur")
       return 0 ;;
@@ -36,7 +36,7 @@ _md_preview() {
   local opts
   case $cmd in
     ''|serve) opts='-p --port -b --browser --no-open --listen --' ;;
-    build)    opts='-o --output --embed --assets --' ;;
+    build)    opts='-o --output --embed --assets --force --base-url --' ;;
     fetch)    opts='--force' ;;
     docs)     opts='-p --port -b --browser --no-open' ;;
     assets)

@@ -6,6 +6,62 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-27
+
+Folder mode: preview or build a whole folder of Markdown, with a file tree
+on every page and links between the files that just work.
+
+### Added
+
+- **Folder mode:** `md-preview build DIR` turns a folder of Markdown into a
+  folder of HTML pages. `a/b.md` becomes `a/b.html`; a folder's `README.md`
+  becomes its `index.html` (unless it has an `index.md`), and a folder with
+  neither gets a generated listing. Relative links to Markdown files and
+  folders are rewritten to the pages they become; images and other files
+  are copied. Every page gets a **file tree** (a sidebar on wide screens, a
+  collapsible box otherwise) with the current page marked; hide it with
+  `md-preview-tree: false`. Builds are incremental and render pages in
+  parallel (`MD_PREVIEW_JOBS`); `--force` renders everything. Hidden
+  folders and `node_modules` are skipped.
+- **Live folder preview:** `md-preview DIR` serves the whole folder and
+  keeps it up to date: a save re-renders just that page, and adding,
+  removing or moving files (including into new subfolders) rebuilds the
+  trees. A save made while a build is running is not lost. A folder's own
+  `index.html` doesn't shadow the preview.
+- **Emacs:** `M-x md-preview-folder` previews a folder (default: the
+  current project's root), and `md-preview-folder-stop` stops it.
+- A page without a `title` now takes its `<title>` from its first
+  level-1 heading, before falling back to the file name.
+- `md-preview-before-html`: a template slot a user filter can fill per
+  page, placed under any `--include-before-body` content.
+- **Sitemaps:** `md-preview build DIR --base-url URL` (or
+  `MD_PREVIEW_BASE_URL`) also writes `sitemap.xml`: every page, folder
+  indexes as the folder's URL, dated by the last commit touching each
+  page's source (or its file date outside git).
+- `MD_PREVIEW_STATE` moves a folder build's state (default
+  `OUT/.md-preview`) elsewhere, e.g. to keep it out of a published site.
+- The project website is now built with folder mode: its pages are listed
+  once, in `site/pages.yaml`, and it rebuilds incrementally. It also
+  publishes a folder demo, and sitemaps for both (`--base-url`).
+
+### Changed
+
+- User pandoc filters (after `--`, or in `MD_PREVIEW_PANDOC_ARGS`) now run
+  before md-preview's own, so they see the document as written. User
+  stylesheets still come after md-preview's, so they override it.
+
+### Fixed
+
+- **Broken section links on the website:** README, INSTALL, REFERENCE and
+  emacs/INSTALL had hand-written contents lists, and INSTALL's numbered
+  headings get different anchors on GitHub (`#6-emacs`) and from pandoc
+  (`#emacs`). The lists are gone (every page has the automatic TOC, now
+  README too), INSTALL's headings are unnumbered, and the site suite checks
+  that every `#anchor` link on the site lands.
+- **Live preview could miss a save:** a save made while md-preview was
+  re-rendering after an editor's rename-style save (a backup file) didn't
+  show up until the next save.
+
 ## [0.1.0] - 2026-09-26
 
 md-preview is now installable by others: an AUR package, a MELPA-ready
@@ -161,7 +217,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/bvraghav/md-preview/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bvraghav/md-preview/compare/v0.0.3...v0.1.0
 [0.0.3]: https://github.com/bvraghav/md-preview/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/bvraghav/md-preview/compare/v0.0.1...v0.0.2

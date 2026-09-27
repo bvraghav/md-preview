@@ -53,7 +53,9 @@ $PROG $VERSION — live Markdown preview (pandoc + entr + browser-sync)
 
 Usage:
   $PROG [serve] [options] FILE.md    live preview in the browser (default)
+  $PROG [serve] [options] DIR        live preview of a folder of Markdown
   $PROG build   [options] FILE.md    render once to HTML
+  $PROG build   [options] DIR        render a folder to a folder of HTML (DIR/_site)
   $PROG fetch   [--force]            download KaTeX + mermaid for offline use
   $PROG assets  DIR                  copy stylesheet + KaTeX + mermaid into DIR
   $PROG docs    [options]            this documentation, at http://localhost:6996
@@ -70,6 +72,8 @@ build options:
   -o, --output FILE    output file (default: FILE.html next to FILE.md; '-' = stdout)
       --embed          self-contained HTML (inline CSS, JS, fonts)
       --assets PREFIX  link assets relative to PREFIX (for publishing; see 'assets')
+      --force          folders: render every page, not only changed ones
+      --base-url URL   folders: also write sitemap.xml, for a site published at URL
 
 docs options:
   -p, --port N         port (default: 6996, or MD_PREVIEW_DOCS_PORT)
@@ -148,12 +152,17 @@ run_pandoc() {
   [[ -n $FRONTMATTER ]] && extra+=(-M "md-preview-frontmatter=$FRONTMATTER")
   [[ -n $TOC ]] && extra+=(-M "md-preview-toc=$TOC")
 
+  # Order matters for options that add up: our stylesheet comes before the
+  # user's (so theirs override it), and user filters (in "$@" and
+  # MD_PREVIEW_PANDOC_ARGS) run before ours, so they see the document as
+  # written.
   pandoc "$src" \
     --from "$FROM" --to html5 --standalone \
     --template "$SHARE/template.html" \
+    --css "$css" \
+    "${extra[@]}" "$@" \
     --lua-filter "$SHARE/filter.lua" \
     --katex="$katex" \
-    --css "$css" \
     --toc \
     --resource-path "$(dirname "$src"):." \
     -V md-preview-katex="$katex" \
@@ -161,10 +170,10 @@ run_pandoc() {
     -V md-preview-js="$js" \
     -V md-preview-version="$VERSION" \
     -V md-preview-built="$(date +%H:%M:%S)" \
-    -M md-preview-file="$(basename "$src")" \
-    "${extra[@]}" "$@" \
+    -M md-preview-file="${FILE_LABEL:-$(basename "$src")}" \
     --output "$out"
 }
+FILE_LABEL=''
 
 html_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
@@ -183,28 +192,270 @@ render_serve() {
     mv -f "$tmp" "$dir/index.html"
     log "rendered $(basename "$src") in $(( $(now_ms) - t0 )) ms"
   else
-    {
-      printf '<!DOCTYPE html><html><head><meta charset="utf-8">'
-      printf '<title>%s: pandoc error</title>' "$PROG"
-      printf '<link rel="stylesheet" href="_md-preview/share/style.css"></head>'
-      printf '<body><main class="markdown-body"><h1>pandoc failed (exit %d)</h1><pre>' "$rc"
-      html_escape <"$err"
-      printf '</pre></main></body></html>\n'
-    } >"$tmp"
+    error_page "$rc" "$err" _md-preview/ >"$tmp"
     mv -f "$tmp" "$dir/index.html"
     log "pandoc failed (exit $rc); error page served"
   fi
 }
 
+# error_page RC ERRFILE ASSET-PREFIX — an HTML page showing pandoc's stderr
+error_page() {
+  printf '<!DOCTYPE html><html><head><meta charset="utf-8">'
+  printf '<title>%s: pandoc error</title>' "$PROG"
+  printf '<link rel="stylesheet" href="%sshare/style.css"></head>' "$3"
+  printf '<body><main class="markdown-body"><h1>pandoc failed (exit %d)</h1><pre>' "$1"
+  html_escape <"$2"
+  printf '</pre></main></body></html>\n'
+}
+
+# ------------------------------------------------------------ folder mode ---
+#
+# A folder of Markdown becomes a folder of HTML pages:
+#   a/b.md       -> a/b.html
+#   a/README.md  -> a/index.html, unless a/index.md exists
+#   a/           -> a/index.html listing its contents, if it has neither
+# Every page gets a file tree (built by filter.lua from STATE/tree) and has
+# relative .md links rewritten to the pages they become.
+#
+# Builds are incremental: a page is rendered again only when its source is
+# newer. Everything is rendered again when the set of files changes (every
+# page's tree changes) or md-preview itself does. Pages render in parallel.
+# State lives in OUT/.md-preview, or MD_PREVIEW_STATE.
+
+FOLDER_ASSETS=_md-preview
+
+# folder_sources SRC OUT — Markdown files under SRC, relative, one per line.
+# Skips hidden files and folders, node_modules, and OUT if it's inside SRC.
+# Follows symlinks.
+folder_sources() {
+  local src=$1 out=$2
+  local -a prune=(-name '.?*' -o -name node_modules)
+  if [[ $out == "$src"/* ]]; then prune+=(-o -path "./${out#"$src"/}"); fi
+  (cd "$src" && find -L . \( "${prune[@]}" \) -prune -o -type f \( -name '*.md' -o -name '*.markdown' \) -print) |
+    sed 's|^\./||' | LC_ALL=C sort
+}
+
+# page_out SRC REL — the output path, relative, of the page for REL
+page_out() {
+  local src=$1 rel=$2 dir base stem
+  if [[ $rel == */* ]]; then dir=${rel%/*}; else dir=.; fi
+  base=${rel##*/}; stem=${base%.*}
+  if [[ ${stem,,} == readme && ! -e $src/$dir/index.md && ! -e $src/$dir/index.markdown ]]; then
+    stem=index
+  fi
+  if [[ $dir == . ]]; then printf '%s.html\n' "$stem"; else printf '%s/%s.html\n' "$dir" "$stem"; fi
+}
+
+# folder_tree SRC OUT — the tree, as tab-separated lines:
+#   P <tab> source <tab> page     for every Markdown file
+#   D <tab> folder <tab> index    for every folder holding one (and ".")
+#   L <tab> folder                for folders that need a generated listing
+folder_tree() {
+  local src=$1 out=$2 rel dir
+  local -A dirs=([.]=1) indexed=()
+  while IFS= read -r rel; do
+    local page; page=$(page_out "$src" "$rel")
+    printf 'P\t%s\t%s\n' "$rel" "$page"
+    dir=$rel
+    while [[ $dir == */* ]]; do dir=${dir%/*}; dirs[$dir]=1; done
+    if [[ ${page##*/} == index.html ]]; then
+      if [[ $page == */* ]]; then indexed[${page%/*}]=1; else indexed[.]=1; fi
+    fi
+  done < <(folder_sources "$src" "$out")
+  while IFS= read -r dir; do
+    if [[ $dir == . ]]; then printf 'D\t.\tindex.html\n'; else printf 'D\t%s\t%s/index.html\n' "$dir" "$dir"; fi
+    [[ -n ${indexed[$dir]:-} ]] || printf 'L\t%s\n' "$dir"
+  done < <(printf '%s\n' "${!dirs[@]}" | LC_ALL=C sort)
+}
+
+# Render one page of a folder build. REL is a Markdown file under SRC, or
+# FOLDER/ for a generated listing. Writes an error page if pandoc fails, and
+# then exits 2 (so a build reports it, while the rest still renders).
+render_page() {
+  local sroot=$1 oroot=$2 state=$3 rel=$4; shift 4
+  local src out_rel label
+  if [[ $rel == */ ]]; then
+    local dir=${rel%/}
+    if [[ $dir == . ]]; then out_rel=index.html; label=$(basename "$sroot")
+    else out_rel=$dir/index.html; label=${dir##*/}; fi
+    src=$state/listing/${dir//\//%}.md
+    mkdir -p "$state/listing"
+    listing_md "$state/tree" "$dir" "$label" >"$src"
+    label="$label/"
+  else
+    out_rel=$(page_out "$sroot" "$rel"); src=$sroot/$rel; label=$rel
+  fi
+  local depth=${out_rel//[^\/]/} prefix=''
+  local i; for (( i = 0; i < ${#depth}; i++ )); do prefix+=../; done
+  ASSET_PREFIX=$prefix$FOLDER_ASSETS/
+  FILE_LABEL=$label
+
+  local dest=$oroot/$out_rel
+  mkdir -p "${dest%/*}"
+  local tmp=$dest.tmp.$$ err=$dest.err.$$ seen=$dest.seen.$$ rc=0
+  # The page gets the source's mtime from before rendering, so a save while
+  # pandoc runs leaves the source newer and the next build renders it again.
+  touch -r "$src" "$seen"
+  run_pandoc "$src" "$tmp" \
+    -M md-preview-page="$rel" \
+    -M md-preview-tree-file="$state/tree" \
+    -M md-preview-root-name="$(basename "$sroot")" \
+    "$@" 2>"$err" || rc=$?
+  if [[ -s $err ]]; then sed "s|^|[pandoc] $rel: |" "$err" >&2; fi
+  if (( rc != 0 )); then error_page "$rc" "$err" "$ASSET_PREFIX" >"$tmp"; fi
+  mv -f "$tmp" "$dest"
+  touch -r "$seen" "$dest"
+  rm -f "$err" "$seen"
+  if (( rc != 0 )); then log "$rel: pandoc failed (exit $rc); error page written"; return 2; fi
+}
+
+# listing_md TREE FOLDER TITLE — Markdown listing FOLDER's pages and subfolders
+listing_md() {
+  local tree=$1 dir=$2 title=$3 kind a b
+  printf '# %s\n\n' "$title"
+  while IFS=$'\t' read -r kind a b; do
+    local parent name
+    if [[ $a == */* ]]; then parent=${a%/*}; else parent=.; fi
+    [[ $parent == "$dir" && $a != . ]] || continue
+    name=${a##*/}
+    case $kind in
+      D) printf -- '- [%s/](<%s/>)\n' "$name" "$name" ;;
+      P) [[ ${b##*/} == index.html ]] || printf -- '- [%s](<%s>)\n' "${name%.*}" "$name" ;;
+    esac
+  done < <(LC_ALL=C sort -t $'\t' -k1,1 -k2,2 "$tree")
+}
+
+# The site's address for sitemap.xml (build --base-url, MD_PREVIEW_BASE_URL).
+BASE_URL=${MD_PREVIEW_BASE_URL:-}
+
+# source_date FILE — date (YYYY-MM-DD) of the last commit touching FILE, in
+# whatever repository its real path is in; else its modification date.
+source_date() {
+  local real d=''
+  real=$(readlink -f "$1")
+  d=$(git -C "${real%/*}" log -1 --format=%cs -- "$real" 2>/dev/null) || d=''
+  [[ -n $d ]] || d=$(date -r "$real" +%F)
+  printf '%s' "$d"
+}
+
+# url_path PATH — PATH with the characters URLs and XML need escaped
+url_path() {
+  local p=$1
+  p=${p//%/%25}; p=${p// /%20}; p=${p//\#/%23}; p=${p//\?/%3F}
+  p=${p//\"/%22}; p=${p//</%3C}; p=${p//>/%3E}; p=${p//&/\&amp;}
+  printf '%s' "$p"
+}
+
+# write_sitemap SRC TREE BASE-URL — sitemap.xml for a folder build: every
+# page, folder indexes as the folder's URL, with the source's date (listings
+# have no source, so no date).
+write_sitemap() {
+  local src=$1 tree=$2 base=${3%/}/ kind a b loc
+  printf '<?xml version="1.0" encoding="UTF-8"?>\n'
+  printf '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+  while IFS=$'\t' read -r kind a b; do
+    case $kind in
+      P) loc=$b; [[ ${loc##*/} == index.html ]] && loc=${loc%index.html}
+         printf '  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>\n' "$base" "$(url_path "$loc")" "$(source_date "$src/$a")" ;;
+      L) if [[ $a == . ]]; then loc=''; else loc=$a/; fi
+         printf '  <url><loc>%s%s</loc></url>\n' "$base" "$(url_path "$loc")" ;;
+    esac
+  done <"$tree"
+  printf '</urlset>\n'
+}
+
+# folder_build SRC OUT MODE [--force] [pandoc args...] — build or update.
+# MODE: build (assets copied, other files copied) or serve (assets linked).
+folder_build() {
+  local src=$1 out=$2 mode=$3; shift 3
+  local force=0
+  if [[ ${1:-} == --force ]]; then force=1; shift; fi
+  local state=${MD_PREVIEW_STATE:-$out/.md-preview} t0 kind a b
+  mkdir -p "$state"
+  # One build at a time (the watcher's, and one entr starts).
+  local lock_fd
+  exec {lock_fd}>"$state/lock"
+  flock "$lock_fd"
+  t0=$(now_ms)
+
+  folder_tree "$src" "$out" >"$state/tree.new"
+  # What every page depends on besides its own source.
+  { printf '%s\n' "$VERSION" "$mode" "$*" "$VENDOR"
+    stat -c '%n %Y' "$SHARE"/{template.html,filter.lua,style.css,md-preview.js}
+  } >"$state/signature.new"
+  if ! cmp -s "$state/tree.new" "$state/tree" || ! cmp -s "$state/signature.new" "$state/signature"; then
+    force=1
+  fi
+  mv -f "$state/tree.new" "$state/tree"
+  mv -f "$state/signature.new" "$state/signature"
+
+  local -a queue=() pages=()
+  while IFS=$'\t' read -r kind a b; do
+    case $kind in
+      P) pages+=("$b")
+         if (( force )) || [[ ! -e $out/$b || $src/$a -nt $out/$b ]]; then queue+=("$a"); fi ;;
+      L) local lo; if [[ $a == . ]]; then lo=index.html; else lo=$a/index.html; fi
+         pages+=("$lo")
+         if (( force )) || [[ ! -e $out/$lo ]]; then queue+=("$a/"); fi ;;
+    esac
+  done <"$state/tree"
+
+  # Remove pages whose source is gone.
+  if [[ -f $state/pages ]]; then
+    local old
+    while IFS= read -r old; do
+      [[ -n $old ]] && rm -f "$out/$old"
+    done < <(LC_ALL=C comm -23 <(LC_ALL=C sort "$state/pages") <(printf '%s\n' "${pages[@]}" | LC_ALL=C sort))
+  fi
+  printf '%s\n' "${pages[@]}" >"$state/pages"
+
+  if [[ $mode == serve ]]; then
+    mkdir -p "$out/$FOLDER_ASSETS"
+    ln -sfn "$SHARE" "$out/$FOLDER_ASSETS/share"
+    if [[ -d $VENDOR ]]; then ln -sfn "$VENDOR" "$out/$FOLDER_ASSETS/vendor"; fi
+  elif (( force )) || [[ ! -e $out/$FOLDER_ASSETS/share/style.css ]]; then
+    cmd_assets "$out/$FOLDER_ASSETS" 2>/dev/null
+    # Everything else pages may link to (images, ...), except Markdown.
+    local -a prune=(-name '.?*' -o -name node_modules)
+    if [[ $out == "$src"/* ]]; then prune+=(-o -path "./${out#"$src"/}"); fi
+    (cd "$src" && find -L . \( "${prune[@]}" \) -prune -o -type f ! -name '*.md' ! -name '*.markdown' -print0 |
+       xargs -0 -r cp -uL --parents -t "$out")
+  fi
+
+  local rc=0
+  if (( ${#queue[@]} )); then
+    printf '%s\0' "${queue[@]}" |
+      xargs -0 -I{} -P "${MD_PREVIEW_JOBS:-$(nproc 2>/dev/null || echo 2)}" \
+        "$SELF" _page "$src" "$out" "$state" {} "$@" || rc=$?
+  fi
+  log "$( (( force )) && echo 'rendered' || echo 'updated' ) ${#queue[@]} of ${#pages[@]} pages in $(( $(now_ms) - t0 )) ms"
+
+  # sitemap.xml, for publishing: rewritten on every build (pages come and
+  # go), removed again if a later build has no base URL.
+  if [[ $mode == build && -n $BASE_URL ]]; then
+    write_sitemap "$src" "$state/tree" "$BASE_URL" >"$out/sitemap.xml.tmp"
+    mv -f "$out/sitemap.xml.tmp" "$out/sitemap.xml"
+    : >"$state/sitemap"
+  elif [[ -e $state/sitemap ]]; then
+    rm -f "$out/sitemap.xml" "$state/sitemap"
+  fi
+  # Release the lock: closing the descriptor matters when this runs inside
+  # the long-lived serve process, which would otherwise hold it forever.
+  exec {lock_fd}>&-
+  return $(( rc == 0 ? 0 : 2 ))
+}
+
 # ------------------------------------------------------------ subcommands ---
 
 cmd_build() {
-  local src='' out='' embed=0
+  local src='' out='' embed=0 force=''
   local -a pass=()
   while (( $# )); do
     case $1 in
       -o|--output) out=${2:?--output needs a value}; shift 2 ;;
       --embed)     embed=1; shift ;;
+      --force)     force=--force; shift ;;
+      --base-url)  BASE_URL=${2:?--base-url needs a value}; shift 2 ;;
       --assets)    ASSET_PREFIX=${2:?--assets needs a value}; shift 2 ;;
       --)          shift; pass=("$@"); break ;;
       -h|--help)   usage; exit 0 ;;
@@ -214,6 +465,21 @@ cmd_build() {
   done
   [[ -n $src ]] || die "no input file (try '$PROG help')"
   [[ -r $src ]] || die "cannot read: $src"
+  if [[ -d $src ]]; then
+    (( embed )) && die "--embed works on single files, not folders"
+    [[ -z $ASSET_PREFIX ]] || die "--assets works on single files; a folder build lays out its own assets"
+    have pandoc || die "pandoc not found"
+    src=$(readlink -f "$src")
+    [[ -n $out ]] || out=$src/_site
+    mkdir -p "$out"
+    out=$(readlink -f "$out")
+    [[ $out != "$src" ]] || die "output folder must differ from the source folder"
+    folder_build "$src" "$out" build $force "${pass[@]}" || die "some pages failed to render (see above); their pages show the error"
+    log "wrote $out"
+    return
+  fi
+  [[ -z $force ]] || die "--force is for folder builds"
+  [[ -z $BASE_URL || -n ${MD_PREVIEW_BASE_URL:-} ]] || die "--base-url is for folder builds"
   [[ -n $out ]] || out=${src%.*}.html
   if (( embed )) && [[ -n $ASSET_PREFIX ]]; then die "--embed and --assets are mutually exclusive"; fi
   (( embed )) && pass=(--embed-resources "${pass[@]}")
@@ -236,7 +502,7 @@ cmd_serve() {
       *)            [[ -z $src ]] || die "only one input file allowed"; src=$1; shift ;;
     esac
   done
-  [[ -n $src ]] || die "no input file (try '$PROG help')"
+  [[ -n $src ]] || die "no input file or folder (try '$PROG help')"
   [[ -r $src ]] || die "cannot read: $src"
   src=$(readlink -f "$src")
 
@@ -273,36 +539,80 @@ cmd_serve() {
   trap 'exit 130' INT
   trap 'exit 143' TERM HUP
 
-  render_serve "$src" "$dir" "${pass[@]}"
+  local -a share_files=("$SHARE"/{template.html,filter.lua,style.css,md-preview.js})
+  local reload=$dir/index.html
+  if [[ -d $src ]]; then
+    # Folder: render everything, then rebuild incrementally on every change.
+    # A new or deleted file makes entr -d exit; the loop then rebuilds (the
+    # trees change) and watches the new list of files. entr only notices new
+    # files in folders it already watches, so the list is also checked every
+    # 2 s (a file in a new subfolder, a folder created empty then filled).
+    folder_build "$src" "$dir" serve "${pass[@]}" || true
+    (
+      while :; do
+        # Snapshot the list *before* building: a file added during the
+        # build then differs from the snapshot, and the poll catches it.
+        local list entr_pid
+        list=$(folder_sources "$src" "$dir")
+        if [[ -z $list ]]; then
+          "$SELF" _folder_build "$src" "$dir" serve "${pass[@]}" 2>&1 | grep -v 'updated 0 of' >&2 || true
+          sleep 1; continue
+        fi
+        # entr first, then build: a save during the build makes entr build
+        # again afterwards (the builds take turns on a lock).
+        local -a files=()
+        mapfile -t files <<<"$list"
+        printf '%s\n' "${files[@]/#/$src/}" "${share_files[@]}" |
+          entr -adnp "$SELF" _folder_build "$src" "$dir" serve "${pass[@]}" &
+        entr_pid=$!
+        "$SELF" _folder_build "$src" "$dir" serve "${pass[@]}" 2>&1 | grep -v 'updated 0 of' >&2 || true
+        while kill -0 "$entr_pid" 2>/dev/null; do
+          sleep 2
+          # entr may have exited already (-d): kill failing must not end the
+          # loop under set -e.
+          [[ $(folder_sources "$src" "$dir") == "$list" ]] || { kill "$entr_pid" 2>/dev/null || true; break; }
+        done
+        wait "$entr_pid" 2>/dev/null || true
+        sleep 0.3
+      done
+    ) &
+    WATCH_PID=$!
+    reload="$dir/**/*.html"
+  else
+    render_serve "$src" "$dir" "${pass[@]}"
 
-  # Watch the source plus our own share files (handy when tweaking styles).
-  # entr exits when a watched file is replaced (editors saving via rename)
-  # or when -d sees a new file in the directory (backups, lock files); just
-  # restart it, re-rendering first if the source changed in the meantime.
-  (
-    while :; do
-      if [[ ! -e $src ]]; then sleep 0.2; continue; fi
-      if [[ $src -nt $dir/.stamp ]]; then "$SELF" _render "$src" "$dir" "${pass[@]}"; fi
-      printf '%s\n' "$src" "$SHARE"/{template.html,filter.lua,style.css,md-preview.js} |
-        entr -adnp "$SELF" _render "$src" "$dir" "${pass[@]}" || true
-      sleep 0.1
-    done
-  ) &
-  WATCH_PID=$!
+    # Watch the source plus our own share files (handy when tweaking styles).
+    # entr exits when a watched file is replaced (editors saving via rename)
+    # or when -d sees a new file in the directory (backups, lock files); just
+    # restart it. If the source changed in the meantime, entr renders as soon
+    # as it starts (no -p), so a save during that render isn't lost either.
+    (
+      while :; do
+        if [[ ! -e $src ]]; then sleep 0.2; continue; fi
+        p=p; if [[ $src -nt $dir/.stamp ]]; then p=''; fi
+        printf '%s\n' "$src" "${share_files[@]}" |
+          entr -adn$p "$SELF" _render "$src" "$dir" "${pass[@]}" || true
+        sleep 0.1
+      done
+    ) &
+    WATCH_PID=$!
+  fi
 
   # Serve our directory first, then the Markdown file's own directory, so
   # relative links (images) resolve but its index.html can't shadow the
   # preview. Only a config file can give browser-sync several base
   # directories; --serveStatic directories are tried before the server's.
   json_str() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; printf '"%s"' "$s"; }
+  local srcdir; if [[ -d $src ]]; then srcdir=$src; else srcdir=$(dirname "$src"); fi
   printf 'module.exports = { server: { baseDir: [%s, %s] } };\n' \
-    "$(json_str "$dir")" "$(json_str "$(dirname "$src")")" > "$dir/.bs-config.js"
+    "$(json_str "$dir")" "$(json_str "$srcdir")" > "$dir/.bs-config.js"
 
   local -a bs_args=(
     start
     --config "$dir/.bs-config.js"
-    --files "$dir/index.html"
+    --files "$reload"
     --watchEvents change add
+    --reload-debounce 300
     --listen "$listen"
     --no-notify --no-ui --no-ghost-mode --no-online
   )
@@ -456,5 +766,7 @@ case ${1:-} in
   docs)   shift; cmd_docs "$@" ;;
   doctor) shift; cmd_doctor "$@" ;;
   _render) shift; render_serve "$@" ;;   # internal: invoked by entr
+  _page)   shift; render_page "$@" ;;    # internal: one page of a folder build
+  _folder_build) shift; folder_build "$@" ;;  # internal: invoked by entr
   *)      cmd_serve "$@" ;;
 esac
