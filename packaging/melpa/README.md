@@ -18,7 +18,8 @@ Not yet on MELPA. The first recipe PR,
 on 2026-09-27: MELPA only takes packages whose repository has been public
 for at least a month, and this one was created on 2026-09-26. Their note
 asks for a **new** pull request (not a reopened one) once that's true, so
-from **2026-10-27**.
+from **2026-10-27**. The steps for then are
+[issue #4](https://github.com/bvraghav/md-preview/issues/4).
 
 For that PR, be ready to say how md-preview differs from the existing
 Markdown previewers (markdown-mode's `markdown-live-preview-mode`,

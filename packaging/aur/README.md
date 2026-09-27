@@ -12,6 +12,14 @@ The package installs md-preview under `/usr`, together with:
 
 `check()` runs `make check`, including the View Source round trip.
 
+## Status
+
+Not on the AUR yet: new AUR account registration has been closed since
+at least 2026-09-27, so there's no account to publish from. Every release
+still gets the package, attached by the `aur` workflow, which skips only
+the push to the AUR. The steps for when registration reopens are
+[issue #5](https://github.com/bvraghav/md-preview/issues/5); they follow [One-time setup](#one-time-setup) below.
+
 ## Testing
 
 ```sh

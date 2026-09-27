@@ -8,8 +8,8 @@ have the same tools under the same or similar package names.
 ## Arch Linux
 
 md-preview isn't on the AUR yet. Its package is ready, but registration
-for new AUR accounts is closed for now, so it can't be published. Until
-then, every [release](https://github.com/bvraghav/md-preview/releases)
+for new AUR accounts is closed for now, so it can't be published
+([#5](https://github.com/bvraghav/md-preview/issues/5) tracks it). Until then, every [release](https://github.com/bvraghav/md-preview/releases)
 carries that same package, in two forms.
 
 **Build it** from the release's `PKGBUILD`, as an AUR helper would:
