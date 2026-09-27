@@ -11,13 +11,13 @@ make -C tests release TAG=v0.1.0   # the release checks, including the tag
 make -C tests clean         # remove _work/
 ```
 
-At 0.2.1 all nine pass: **456 checks**, about 2½ minutes. CI runs fewer:
+At 0.2.4 all nine pass: **459 checks**, about 2½ minutes. CI runs fewer:
 `emacs` and `aur` don't run there, and the zsh and nvm-fallback checks
 don't apply on the runner.
 
 | Suite | Checks | Covers | Needs |
 |---|---|---|---|
-| `build` | 78 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
+| `build` | 81 | rendering `test-sample.md`, output modes (`--assets`, `--embed`, `-o -`), frontmatter and TOC precedence, the KaTeX option for the installed pandoc version, `gfm`, untitled pages, CLI errors, `assets`, `make install`, the View Source round trip | pandoc, python3 |
 | `folder` | 66 | folder mode on `tests/folder-sample`: the page set, README/index/listing pages, link rewriting (`../`, anchors, folders, spaces), assets relative to depth, the file tree (current page, open folders), titles, incremental rebuilds (edit, add, remove, `--force`), a broken page, options, user-filter order, single files unchanged | pandoc |
 | `completions` | 42 | bash completion called directly; zsh completion in a real interactive zsh (driven through `zsh/zpty` by `zcomp.zsh`); the man page builds and has every section | zsh, pandoc, man |
 | `site` | 92 | the website: page set, link rewriting, every `#anchor` link lands (`anchors.py`), frontmatter and TOC per page, footer, every page and asset over HTTP | pandoc, python3 |

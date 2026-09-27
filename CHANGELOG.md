@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-27
+
+### Fixed
+
+- **pandoc 3.11:** it deprecates `--katex`, so every page printed a
+  warning, and the Arch package's `check()` (which treats pandoc warnings
+  as failures) failed; the v0.2.3 release got no package. md-preview now
+  passes `--math-method=katex:URL` to pandoc 3.11 and newer and `--katex`
+  to older ones, deciding once per `serve` or `build`.
+
+### Changed
+
+- CI tests with pandoc 3.11, the version Arch now ships; INSTALL's
+  examples use it too. pandoc 3.9 or newer still works.
+
 ## [0.2.3] - 2026-09-27
 
 Documentation only: how the project is maintained, and where publishing
@@ -288,7 +303,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/bvraghav/md-preview/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/bvraghav/md-preview/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/bvraghav/md-preview/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bvraghav/md-preview/compare/v0.2.0...v0.2.1

@@ -84,6 +84,21 @@ refute "untitled: no title warning"  grep -q WARNING "$W/untitled.html.err"
 printf -- '---\ntitle: [unclosed\n---\n' > "$W/bad.md"
 refute "bad YAML: build fails"       "$MDP" build -o "$W/bad.html" "$W/bad.md"
 
+echo "== KaTeX option by pandoc version"
+# A stub pandoc that reports VERSION and records its arguments: 3.11
+# deprecates --katex (a warning on every page) for --math-method=katex.
+katex_arg() {
+  local stub=$W/stub-$1
+  mkdir -p "$stub"
+  printf '#!/bin/sh\n[ "$1" = --version ] && { echo "pandoc %s"; exit; }\nprintf "%%s\\n" "$@" > "%s/args"\n' "$1" "$stub" > "$stub/pandoc"
+  chmod +x "$stub/pandoc"
+  env -u _MD_PREVIEW_KATEX PATH="$stub:$PATH" "$MDP" build -o "$W/stub.html" test-sample.md >/dev/null 2>&1
+  grep -E '^--(katex|math-method)' "$stub/args" | sed 's/[=:].*//'
+}
+eq "pandoc 3.10.2: --katex"            --katex "$(katex_arg 3.10.2)"
+eq "pandoc 3.11: --math-method"        --math-method "$(katex_arg 3.11)"
+eq "pandoc 4.0: --math-method"         --math-method "$(katex_arg 4.0)"
+
 echo "== command line"
 eq "version matches VERSION"   "md-preview $(cat VERSION)" "$("$MDP" version)"
 check "help exits 0"           "$MDP" help

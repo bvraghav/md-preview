@@ -139,12 +139,30 @@ asset_urls() {
   printf '%s %s %s %s\n' "$css" "$js" "$katex" "$mermaid"
 }
 
+# katex_option — set _MD_PREVIEW_KATEX to the option that loads KaTeX from a
+# URL appended to it: pandoc 3.11 deprecates --katex=URL (a warning, which
+# `make check` treats as a failure) for --math-method=katex:URL, which older
+# versions don't know. Decided once and exported: asking pandoc its version
+# costs a start-up, and the renders that entr and xargs start inherit it.
+katex_option() {
+  [[ -z ${_MD_PREVIEW_KATEX:-} ]] || return 0
+  local v
+  v=$(pandoc --version 2>/dev/null | sed -n '1s/^[^ ]* \([0-9][0-9.]*\).*/\1/p')
+  if [[ -n $v && $(printf '%s\n' 3.11 "$v" | sort -V | head -1) == 3.11 ]]; then
+    _MD_PREVIEW_KATEX=--math-method=katex:
+  else
+    _MD_PREVIEW_KATEX=--katex=
+  fi
+  export _MD_PREVIEW_KATEX
+}
+
 # run_pandoc SRC OUT [extra pandoc args...]
 run_pandoc() {
   local src=$1 out=$2; shift 2
   local css js katex mermaid
   read -r css js katex mermaid < <(asset_urls)
 
+  katex_option
   local -a extra=()
   # Word-splitting of MD_PREVIEW_PANDOC_ARGS is intentional.
   # shellcheck disable=SC2206
@@ -162,7 +180,7 @@ run_pandoc() {
     --css "$css" \
     "${extra[@]}" "$@" \
     --lua-filter "$SHARE/filter.lua" \
-    --katex="$katex" \
+    "$_MD_PREVIEW_KATEX$katex" \
     --toc \
     --resource-path "$(dirname "$src"):." \
     -V md-preview-katex="$katex" \
@@ -368,6 +386,7 @@ write_sitemap() {
 # MODE: build (assets copied, other files copied) or serve (assets linked).
 folder_build() {
   local src=$1 out=$2 mode=$3; shift 3
+  katex_option     # once, before the page renders it starts in parallel
   local force=0
   if [[ ${1:-} == --force ]]; then force=1; shift; fi
   local state=${MD_PREVIEW_STATE:-$out/.md-preview} t0 kind a b
@@ -508,6 +527,7 @@ cmd_serve() {
 
   have pandoc || die "pandoc not found"
   have entr   || die "entr not found"
+  katex_option
   find_browser_sync || die "browser-sync not found (npm i -g browser-sync, or set MD_PREVIEW_BROWSER_SYNC)"
 
   [[ -r $VENDOR/katex/katex.min.js ]] ||
