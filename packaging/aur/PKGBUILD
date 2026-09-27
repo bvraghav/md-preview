@@ -21,7 +21,7 @@ source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
         "katex-$_katex.tgz::https://registry.npmjs.org/katex/-/katex-$_katex.tgz"
         "mermaid-$_mermaid.min.js::https://cdn.jsdelivr.net/npm/mermaid@$_mermaid/dist/mermaid.min.js")
 noextract=("katex-$_katex.tgz")
-sha256sums=('SKIP'
+sha256sums=('d7cda6be81d857ead292bf5d6fb4887c461685c0a4e5fa63010ddade8be88eb2'
             '78174318fa53363e4321ac3c10b39d3598aaa73a92dc75362eb08b16f6705782'
             '28fca7ae6ebc7ed7bb63bde63136a74bfef14f296a57e403657eeb8b32836073')
 
