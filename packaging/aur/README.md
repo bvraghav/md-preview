@@ -35,7 +35,8 @@ automatic: when the GitHub release for `vX.Y.Z` is published, the
    tag's tarball; then regenerates `.SRCINFO`;
 3. builds and checks the package with `makepkg` as a non-root user, and runs
    `namcap`;
-4. attaches the `PKGBUILD` and the built package to the GitHub release, for
+4. attaches the `PKGBUILD` and the built package to the GitHub release, and
+   adds a short section on them to the release notes, for
    installing without the AUR (see [INSTALL.md](../../INSTALL.md#arch-linux));
 5. pushes `PKGBUILD` and `.SRCINFO` to
    `ssh://aur@aur.archlinux.org/md-preview.git` (the first push creates the

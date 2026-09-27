@@ -14,6 +14,8 @@ All notable changes to this project are documented here. The format follows
   `curl -LO https://github.com/bvraghav/md-preview/releases/latest/download/PKGBUILD`
   and `makepkg -si`, or `pacman -U` on the package; INSTALL and README
   show both.
+  The release notes get a short "Arch Linux" section saying what the two
+  files are.
 
 ### Changed
 
