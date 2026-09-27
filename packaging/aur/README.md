@@ -24,29 +24,61 @@ nothing fetched, and checks that `.SRCINFO` matches the `PKGBUILD`.
 
 ## Releasing a new version
 
-After the `vX.Y.Z` tag is pushed (see [CONTRIBUTING.md](../../CONTRIBUTING.md)):
+`make bump V=X.Y.Z` sets `pkgver` and `pkgrel=1` along with every other copy
+of the version (see [CONTRIBUTING.md](../../CONTRIBUTING.md)). The rest is
+automatic: when the GitHub release for `vX.Y.Z` is published, the
+[`aur` workflow](../../.github/workflows/aur.yml)
 
-1. In `PKGBUILD`, set `pkgver=X.Y.Z` and `pkgrel=1`. If md-preview's pinned
-   KaTeX or mermaid versions changed, update `_katex` and `_mermaid` too.
-2. Fill in the checksums, now that GitHub serves the tag's tarball:
-   ```sh
-   cd packaging/aur
-   updpkgsums
-   makepkg --printsrcinfo > .SRCINFO
-   ```
-3. Test: `make -C tests aur`, and, with devtools installed, a clean-chroot
-   build: `pkgctl build` (or `extra-x86_64-build`) in `packaging/aur`.
-4. Commit the updated `PKGBUILD` and `.SRCINFO` here.
-5. Publish to the AUR:
-   ```sh
-   git clone ssh://aur@aur.archlinux.org/md-preview.git ~/aur/md-preview   # once
-   cp packaging/aur/PKGBUILD packaging/aur/.SRCINFO ~/aur/md-preview/
-   cd ~/aur/md-preview
-   git add PKGBUILD .SRCINFO
-   git commit -m "md-preview X.Y.Z"
-   git push
-   ```
-   The first push creates the package; it needs an AUR account with your
-   SSH key.
+1. waits for the tag's own CI run (tests and release checks) to pass;
+2. in an Arch Linux container, runs `update.sh X.Y.Z`: the KaTeX and mermaid
+   versions that tag pins, and every checksum, now that GitHub serves the
+   tag's tarball; then regenerates `.SRCINFO`;
+3. builds and checks the package with `makepkg` as a non-root user, and runs
+   `namcap`;
+4. pushes `PKGBUILD` and `.SRCINFO` to
+   `ssh://aur@aur.archlinux.org/md-preview.git` (the first push creates the
+   package);
+5. commits them back to `packaging/aur/` on `main`.
 
-For packaging-only fixes, bump `pkgrel` instead of `pkgver`.
+Pre-releases are built but not published. Each run uploads the package,
+`PKGBUILD` and `.SRCINFO` as an artifact.
+
+### Dry run
+
+Actions → aur → Run workflow, with a tag (default: the latest release) and
+"publish" unticked: steps 1–3 only. Use it to try the pipeline, or to check
+an older tag. Ticking "publish" also does steps 4–5, e.g. for a release
+published before this workflow existed.
+
+### One-time setup
+
+Until this is done, releases still build and check the package, and commit
+its checksums back to `main`; only the push to the AUR is skipped, with a
+warning in the run.
+
+1. An account on <https://aur.archlinux.org>.
+2. A key pair just for this:
+   ```sh
+   ssh-keygen -t ed25519 -N '' -C 'md-preview AUR (GitHub Actions)' -f aur_md-preview
+   ```
+   Add `aur_md-preview.pub` to the AUR account (My Account → SSH Public Key).
+3. Add the private key, `aur_md-preview`, as the repository secret
+   `AUR_SSH_PRIVATE_KEY` (Settings → Secrets and variables → Actions), then
+   delete both files.
+
+### By hand
+
+If the workflow can't run, the same steps from `packaging/aur`:
+
+```sh
+./update.sh X.Y.Z                 # needs the tag on GitHub
+makepkg -f && namcap PKGBUILD md-preview-*.pkg.tar.*
+git clone ssh://aur@aur.archlinux.org/md-preview.git ~/aur/md-preview   # once
+cp PKGBUILD .SRCINFO ~/aur/md-preview/
+cd ~/aur/md-preview && git add PKGBUILD .SRCINFO && git commit -m "md-preview X.Y.Z" && git push
+```
+
+and commit the updated `PKGBUILD` and `.SRCINFO` here.
+
+For packaging-only fixes, bump `pkgrel` by hand instead of `pkgver`, and
+publish by hand; the workflow always sets `pkgrel=1`.

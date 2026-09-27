@@ -6,6 +6,8 @@
 #   make man                build the man page (man/md-preview.1) with pandoc
 #   make link               symlink bin/md-preview into $(PREFIX)/bin (for hacking)
 #   make uninstall          remove what the install targets and link created
+#   make bump V=X.Y.Z       prepare a release: every copy of the version, the
+#                           CHANGELOG section and links, the AUR PKGBUILD
 #
 # DESTDIR is prepended to every installed path, for staged installs.
 #   make test               run the regression suites in tests/ (see tests/Makefile)
@@ -35,7 +37,7 @@ SHARE_FILES := share/md-preview/template.html \
 
 CHECK_OUT := test-sample.html
 
-.PHONY: install install-docs install-vendor man link uninstall test check clean
+.PHONY: install install-docs install-vendor man link uninstall bump test check clean
 
 man: man/md-preview.1
 
@@ -66,6 +68,9 @@ install-vendor:
 	rm -rf $(DESTDIR)$(SHAREDIR)/vendor
 	mkdir -p $(DESTDIR)$(SHAREDIR)
 	cp -rL $(VENDOR_SRC) $(DESTDIR)$(SHAREDIR)/vendor
+
+bump:
+	@tools/bump.sh "$(V)" $(DATE)
 
 link:
 	mkdir -p $(BINDIR)

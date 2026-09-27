@@ -24,7 +24,8 @@ checks: byte-compilation with warnings as errors, `checkdoc`,
 4. Open a pull request against `melpa/melpa`, following its
    [CONTRIBUTING](https://github.com/melpa/melpa/blob/master/CONTRIBUTING.org)
    template. Mention that the package drives an external command,
-   installed separately (AUR `md-preview`, or from source).
+   installed separately (on Arch, the package built from `packaging/aur`;
+   elsewhere, from source).
 
 After it's merged, nothing more is needed per release: MELPA picks up new
 commits and MELPA Stable picks up new tags.

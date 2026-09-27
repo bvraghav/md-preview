@@ -3,8 +3,9 @@
 ;; Copyright (C) 2026 B.V. Raghav
 
 ;; Author: B.V. Raghav <bvraghav@gmail.com>
+;; Assisted-by: Claude Code:claude-opus-5-5
 ;; Maintainer: B.V. Raghav <bvraghav@gmail.com>
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: tools, text, hypermedia
 ;; URL: https://github.com/bvraghav/md-preview
@@ -31,7 +32,7 @@
 ;; between the files working; `md-preview-folder-stop' stops it.
 ;;
 ;; This package drives the `md-preview' command, which is installed
-;; separately (Arch: the AUR package `md-preview'; elsewhere, from source).
+;; separately (Arch: the package in packaging/aur; elsewhere, from source).
 ;; See https://bvraghav.github.io/md-preview/install.html
 
 ;;; Code:

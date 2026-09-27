@@ -6,6 +6,30 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-27
+
+Release pipeline: one command prepares a release, and publishing it builds
+and checks the Arch package, ready for the AUR.
+
+### Added
+
+- `make bump V=X.Y.Z`: sets every copy of the version (the ones the release
+  checks verify, and the AUR PKGBUILD), and turns `[Unreleased]` into a
+  dated CHANGELOG section with its compare link.
+- **AUR publishing from CI:** when a GitHub release is published and its
+  tag passed CI, the `aur` workflow updates the PKGBUILD's checksums (and
+  KaTeX and mermaid versions) with `packaging/aur/update.sh`, builds and
+  checks the package in an Arch Linux container, pushes it to the AUR, and
+  commits the result back to `main`. Run by hand, it's a dry run. Without
+  the `AUR_SSH_PRIVATE_KEY` secret, it skips only the push to the AUR.
+
+### Changed
+
+- **Installing on Arch:** md-preview isn't on the AUR yet (new AUR accounts
+  can't be registered for now), so INSTALL and README now show how to build
+  and install the same package with `makepkg -si` from `packaging/aur`, at
+  the latest release tag.
+
 ## [0.2.0] - 2026-09-27
 
 Folder mode: preview or build a whole folder of Markdown, with a file tree
@@ -217,7 +241,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/bvraghav/md-preview/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bvraghav/md-preview/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bvraghav/md-preview/compare/v0.0.3...v0.1.0
 [0.0.3]: https://github.com/bvraghav/md-preview/compare/v0.0.2...v0.0.3

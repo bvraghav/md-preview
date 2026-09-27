@@ -17,6 +17,22 @@ echo "== .SRCINFO"
 check ".SRCINFO matches the PKGBUILD" \
   diff <(cd "$ROOT/packaging/aur" && makepkg --printsrcinfo) "$ROOT/packaging/aur/.SRCINFO"
 
+echo "== update.sh (what the aur workflow runs)"
+V=$(cat "$ROOT/VERSION")
+if curl -fsIL -o /dev/null "https://github.com/bvraghav/md-preview/archive/refs/tags/v$V.tar.gz"; then
+  mkdir -p "$W/update"; cp "$ROOT/packaging/aur/PKGBUILD" "$ROOT/packaging/aur/.SRCINFO" "$W/update/"
+  sed -i 's/^pkgrel=.*/pkgrel=7/' "$W/update/PKGBUILD"
+  check "update.sh $V"                  bash -c "'$ROOT/packaging/aur/update.sh' '$V' '$W/update' >'$W/update.log' 2>&1"
+  eq "  pkgver, pkgrel"                 "pkgver=$V pkgrel=1" "$(grep -E '^pkg(ver|rel)=' "$W/update/PKGBUILD" | paste -sd' ')"
+  eq "  KaTeX as md-preview pins it"    "$(sed -n 's/^KATEX_VERSION=.*:-\(.*\)}$/\1/p' "$MDP")" "$(sed -n 's/^_katex=//p' "$W/update/PKGBUILD")"
+  eq "  mermaid as md-preview pins it"  "$(sed -n 's/^MERMAID_VERSION=.*:-\(.*\)}$/\1/p' "$MDP")" "$(sed -n 's/^_mermaid=//p' "$W/update/PKGBUILD")"
+  refute "  no SKIP checksums"          grep -q SKIP "$W/update/PKGBUILD"
+  check "  .SRCINFO matches"            diff <(cd "$W/update" && makepkg --printsrcinfo) "$W/update/.SRCINFO"
+  check "  sources verify"              bash -c "cd '$W/update' && makepkg --verifysource >/dev/null 2>&1"
+else
+  note "v$V isn't on GitHub yet; skipping update.sh"
+fi
+
 echo "== build"
 cp "$PKGBUILD" "$W/build/"
 # Our tarball of HEAD isn't byte-identical to GitHub's, so skip only its

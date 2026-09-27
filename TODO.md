@@ -40,63 +40,15 @@
 ## Priorities
 
 Work in this order. Item numbers match the Intent list
-(13 was added later). Items 1, 2, 4, 5, 7–13 and part of
+(13 and 14 were added later). Items 1, 2, 4, 5, 7–14 and part of
 6 are done; see `# DONE` below.
 
 | # | Item | Release | Why here |
 |---|------|---------|----------|
-| 14 | Release pipeline (bump → AUR) | 0.2.1 | Every later release uses it |
 | 6 | Remaining build-time extras | 0.2.x | "Previous/next" needs folder mode |
 | 3 | Svelte | later | Only if the tree needs search |
 
-## P1: 0.2.1, release pipeline
-
-### 14. CI/CD: version bump → AUR (and MELPA)
-
-**AUR: fully automatable. MELPA: nothing to automate.**
-Keep it in this repo; no separate template repos. The
-AUR's git repo is the published copy, and
-`packaging/aur/` is already here, so a third copy would
-only need keeping in sync.
-
-- **MELPA** builds snapshots from `main` and MELPA
-  Stable from `vX.Y.Z` tags by itself, once the recipe
-  is merged (a one-time PR, reviewed by hand). So
-  `update-and-publish-melpa` is a no-op per release;
-  the release checks already make sure the tag and the
-  `;; Version:` header agree.
-- **`version-bump`:** a local `make bump V=X.Y.Z` that
-  rewrites every copy of the version the release checks
-  verify, and renames `[Unreleased]` to a dated section.
-  Then review, commit, push, wait for green, tag: a
-  human decision before anything is published.
-- **`update-and-publish` (AUR):** `aur.yml`, run when a
-  GitHub release is published, only if the tag's tests
-  and release checks passed, in an Arch Linux container:
-  1. set `pkgver`, `pkgrel=1`
-  2. `updpkgsums` against GitHub's tag tarball;
-     regenerate `.SRCINFO`
-  3. `makepkg` as a non-root user (build + check),
-     `namcap`
-  4. push PKGBUILD + .SRCINFO to
-     `aur.archlinux.org/md-preview.git` over SSH
-  5. commit the updated `packaging/aur/` back to `main`
-     (needs a write token, and a guard so that commit
-     doesn't start another release)
-- **Dry run:** a manual trigger that does steps 1–3
-  without pushing, to test the pipeline before a real
-  release, or to run it for a release tagged before it
-  existed (such as v0.1.0).
-- **Needs from the maintainer:** an AUR account; a
-  dedicated SSH key pair, public half in the AUR
-  account, private half as the GitHub secret
-  `AUR_SSH_PRIVATE_KEY`; and the one-time MELPA recipe
-  PR from their GitHub account.
-- **Testing:** the container steps locally only if
-  Docker or Podman is available; otherwise the dry run
-  on GitHub is the first test.
-
-## P3: 0.2.x
+## P1: 0.2.x
 
 ### 6. “Formulate once, fill in at every build”
 
@@ -107,7 +59,7 @@ done; these remain:
 - "edit on GitHub" links
 - previous/next page links in folder mode
 
-## P4: later, only if needed
+## P2: later, only if needed
 
 ### 3. Svelte
 
@@ -163,10 +115,10 @@ Planned releases:
 - **0.2.0: folder mode.** Done (see `# DONE`). It went
   ahead of the release pipeline, which therefore becomes
   0.2.1 (a 0.1.1 can't follow 0.2.0).
-- **0.2.1: release pipeline.** Item 14: `make bump`, and
-  publishing to the AUR from CI when a release is
-  published. PATCH, since it changes packaging, not
-  md-preview's interface.
+- **0.2.1: release pipeline.** Done (see `# DONE`): item
+  14, `make bump` and publishing to the AUR from CI when
+  a release is published. PATCH, since it changes
+  packaging, not md-preview's interface.
 - **0.2.x:** the rest of item 6.
 - **1.0.0** when the CLI, environment variables,
   frontmatter keys and template variables are frozen,
@@ -177,6 +129,69 @@ Planned releases:
   searchable tree.
 
 # DONE
+
+## 0.2.1
+
+### 14. CI/CD: version bump → AUR (and MELPA)
+
+**AUR: fully automatable. MELPA: nothing to automate.**
+Keep it in this repo; no separate template repos. The
+AUR's git repo is the published copy, and
+`packaging/aur/` is already here, so a third copy would
+only need keeping in sync.
+
+- **MELPA** builds snapshots from `main` and MELPA
+  Stable from `vX.Y.Z` tags by itself, once the recipe
+  is merged (a one-time PR, reviewed by hand). So
+  `update-and-publish-melpa` is a no-op per release;
+  the release checks already make sure the tag and the
+  `;; Version:` header agree.
+- **`version-bump`:** a local `make bump V=X.Y.Z` that
+  rewrites every copy of the version the release checks
+  verify, and renames `[Unreleased]` to a dated section.
+  Then review, commit, push, wait for green, tag: a
+  human decision before anything is published.
+- **`update-and-publish` (AUR):** `aur.yml`, run when a
+  GitHub release is published, only if the tag's tests
+  and release checks passed, in an Arch Linux container:
+  1. set `pkgver`, `pkgrel=1`
+  2. `updpkgsums` against GitHub's tag tarball;
+     regenerate `.SRCINFO`
+  3. `makepkg` as a non-root user (build + check),
+     `namcap`
+  4. push PKGBUILD + .SRCINFO to
+     `aur.archlinux.org/md-preview.git` over SSH
+  5. commit the updated `packaging/aur/` back to `main`
+     (needs a write token, and a guard so that commit
+     doesn't start another release)
+- **Dry run:** a manual trigger that does steps 1–3
+  without pushing, to test the pipeline before a real
+  release, or to run it for a release tagged before it
+  existed (such as v0.1.0).
+- **Needs from the maintainer:** an AUR account; a
+  dedicated SSH key pair, public half in the AUR
+  account, private half as the GitHub secret
+  `AUR_SSH_PRIVATE_KEY`; and the one-time MELPA recipe
+  PR from their GitHub account.
+- **Testing:** the container steps locally only if
+  Docker or Podman is available; otherwise the dry run
+  on GitHub is the first test.
+
+**Shipped in 0.2.1:** `make bump` (`tools/bump.sh`) and
+`.github/workflows/aur.yml` as described, with the
+PKGBUILD update in `packaging/aur/update.sh` so it can be
+run and tested outside CI (the `aur` suite runs it
+against the released tag). Before building, the workflow
+waits for the tag's own CI run to pass; pre-releases are
+built but not published. The one-time setup (AUR
+account, SSH key, the `AUR_SSH_PRIVATE_KEY` secret) and
+the MELPA recipe PR are still the maintainer's to do
+(AUR registration is closed for now; until the secret is
+set, the workflow skips the push with a warning).
+Tested locally: `bump`, `update.sh`, `makepkg`, and the
+workflow's API queries; the container steps get their
+first run as a dry run on GitHub (no Docker here).
+
 
 ## 0.2.0
 
