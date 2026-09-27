@@ -31,7 +31,7 @@
 ;; between the files working; `md-preview-folder-stop' stops it.
 ;;
 ;; This package drives the `md-preview' command, which is installed
-;; separately (Arch: the AUR package `md-preview'; elsewhere, from source).
+;; separately (Arch: the package in packaging/aur; elsewhere, from source).
 ;; See https://bvraghav.github.io/md-preview/install.html
 
 ;;; Code:

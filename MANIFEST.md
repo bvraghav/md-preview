@@ -29,7 +29,7 @@ Every file in the repository and what it does.
 | `share/md-preview/style.css`       | GitHub-like light/dark stylesheet |
 | `share/md-preview/md-preview.js`   | Page enhancements: heading anchors, copy buttons, TOC state and current-section highlight |
 | `emacs/md-preview.el`              | Emacs package: `md-preview-mode` and commands (MELPA-ready) |
-| `emacs/INSTALL.md`                 | Emacs setup: MELPA, AUR, straight/Elpaca, options, PATH problems, testing an unreleased version |
+| `emacs/INSTALL.md`                 | Emacs setup: MELPA, the Arch package, straight/Elpaca, options, PATH problems, testing an unreleased version |
 | `man/md-preview.1.md`              | Man page source; `make man` builds `man/md-preview.1` with pandoc |
 | `completions/md-preview.bash`      | bash completion: commands, per-command options, Markdown files |
 | `completions/_md-preview`          | zsh completion, the same with descriptions |

@@ -29,9 +29,9 @@ separately; see [INSTALL.md](../INSTALL.md). Check it with
 or `M-x package-install RET md-preview RET`. MELPA installs only the Elisp;
 you still need the `md-preview` command.
 
-### With the AUR package or `make install`
+### With the Arch package or `make install`
 
-The package is already installed, in `/usr/share/emacs/site-lisp` (AUR) or
+The package is already installed, in `/usr/share/emacs/site-lisp` (Arch package) or
 `~/.local/share/emacs/site-lisp` (`make install`). The first is on Emacs'
 `load-path` by default; for the second:
 

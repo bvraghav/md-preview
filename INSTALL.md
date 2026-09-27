@@ -1,19 +1,53 @@
 # Installing md-preview
 
-**On Arch Linux**, install the AUR package:
+On Arch Linux, build and install the package ([below](#arch-linux)). On
+other systems, or to work on md-preview itself, install from source: the
+rest of this page. Its commands are for Arch Linux; other distributions
+have the same tools under the same or similar package names.
+
+## Arch Linux
+
+md-preview isn't on the AUR yet. Its package is ready, but registration
+for new AUR accounts is closed for now, so it can't be published. Until
+then, build that same package yourself with `makepkg`, from the PKGBUILD
+in this repository:
 
 ```sh
-yay -S md-preview              # or any AUR helper; or makepkg from the AUR repo
-npm install -g browser-sync    # for live reload (optional, but recommended)
+git clone https://github.com/bvraghav/md-preview.git
+cd md-preview
+git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"   # the latest release
+cd packaging/aur
+makepkg -si                     # build, check and install (asks for sudo)
+npm install -g browser-sync     # for live reload (optional, but recommended)
+md-preview doctor               # check everything is found
 ```
 
-It includes KaTeX and mermaid (no `md-preview fetch` needed), the
-documentation (`md-preview docs`), the man page, shell completion and the
-Emacs package. For Emacs setup, see [emacs/INSTALL.md](emacs/INSTALL.md).
+- **`-s`** installs what the build needs with pacman (`pandoc-cli`,
+  `entr`, `make`, `python`); **`-i`** installs the package.
+- **It takes a little while** (under a minute on most machines):
+  makepkg downloads the release, KaTeX and mermaid (a few MB), builds the
+  documentation website with pandoc, then renders the demo as a check.
+  That's what lets the package work offline, with no `md-preview fetch`.
+- **Checksums:** KaTeX and mermaid are verified. md-preview's own tarball
+  shows as "Skipped" at a release tag: its checksum only exists once
+  GitHub serves the tag, and CI adds it to `main` afterwards.
 
-The rest of this page covers **installation from source**. The commands are
-for Arch Linux; other distributions have the same tools under the same or
-similar package names.
+To upgrade, from the clone:
+
+```sh
+git fetch --tags
+git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"
+cd packaging/aur && makepkg -si
+```
+
+To remove it: `sudo pacman -R md-preview`.
+
+Once it's on the AUR, `yay -S md-preview` (or any AUR helper) does the
+same. pacman sees it as the same package, so nothing needs undoing first.
+
+The package includes KaTeX and mermaid, the documentation
+(`md-preview docs`), the man page, shell completion and the Emacs package.
+For Emacs setup, see [emacs/INSTALL.md](emacs/INSTALL.md).
 
 ## Requirements
 
@@ -214,7 +248,7 @@ make install-vendor DESTDIR="$pkgdir" PREFIX=/usr VENDOR_SRC=/path/to/vendor
 `mermaid/mermaid.min.js`) to `/usr/share/md-preview/vendor`, so the package
 works offline without `md-preview fetch`. With the same directory at
 `$MD_PREVIEW_DATA/vendor`, `install-docs` builds without network access.
-The AUR package does exactly this; see `packaging/aur/`.
+The Arch package does exactly this; see `packaging/aur/`.
 
 ## Upgrading
 

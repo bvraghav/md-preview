@@ -8,8 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [0.2.1] - 2026-09-27
 
-Release pipeline: one command prepares a release, and publishing it updates
-the AUR package.
+Release pipeline: one command prepares a release, and publishing it builds
+and checks the Arch package, ready for the AUR.
 
 ### Added
 
@@ -22,6 +22,13 @@ the AUR package.
   checks the package in an Arch Linux container, pushes it to the AUR, and
   commits the result back to `main`. Run by hand, it's a dry run. Without
   the `AUR_SSH_PRIVATE_KEY` secret, it skips only the push to the AUR.
+
+### Changed
+
+- **Installing on Arch:** md-preview isn't on the AUR yet (new AUR accounts
+  can't be registered for now), so INSTALL and README now show how to build
+  and install the same package with `makepkg -si` from `packaging/aur`, at
+  the latest release tag.
 
 ## [0.2.0] - 2026-09-27
 
