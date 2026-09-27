@@ -17,7 +17,7 @@ pkgbase = md-preview
 	source = md-preview-0.2.1.tar.gz::https://github.com/bvraghav/md-preview/archive/refs/tags/v0.2.1.tar.gz
 	source = katex-0.18.9.tgz::https://registry.npmjs.org/katex/-/katex-0.18.9.tgz
 	source = mermaid-12.0.0.min.js::https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.min.js
-	sha256sums = SKIP
+	sha256sums = a8bd42040d29a70f37c0fc4203e45f870123710963200338a8fb78375dcda385
 	sha256sums = 78174318fa53363e4321ac3c10b39d3598aaa73a92dc75362eb08b16f6705782
 	sha256sums = 28fca7ae6ebc7ed7bb63bde63136a74bfef14f296a57e403657eeb8b32836073
 
