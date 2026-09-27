@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- CI: the run list says what each run did. The `aur` job is named after its
+  outcome ("publish to the AUR", "AUR push off: no key", or "dry run"),
+  and the site's deploy job reads "deploy (main only)", so it's clear why
+  it's skipped on pull requests. `actions/upload-artifact` is now v7 (Node
+  24; v5 ran on the deprecated Node 20).
+
 ## [0.2.1] - 2026-09-27
 
 Release pipeline: one command prepares a release, and publishing it builds

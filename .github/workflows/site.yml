@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload test logs
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: test-logs
           path: tests/_work/**/*.log
@@ -76,6 +76,7 @@ jobs:
           path: site/_site
 
   deploy:
+    name: deploy (main only)
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest

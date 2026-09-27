@@ -37,6 +37,7 @@ jobs:
     outputs:
       version: ${{ steps.tag.outputs.version }}
       publish: ${{ steps.tag.outputs.publish }}
+      aur_key: ${{ steps.tag.outputs.aur_key }}
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
@@ -48,6 +49,8 @@ jobs:
           PRERELEASE: ${{ github.event.release.prerelease }}
           INPUT_TAG: ${{ inputs.tag }}
           INPUT_PUBLISH: ${{ inputs.publish }}
+          # Only whether it's set: job names can't read secrets.
+          AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY != '' }}
         run: |
           if [[ $GITHUB_EVENT_NAME == release ]]; then
             tag=$RELEASE_TAG publish=true
@@ -60,7 +63,7 @@ jobs:
           fi
           [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$tag' is not a vX.Y.Z tag"; exit 1; }
           echo "$tag, publish=$publish"
-          { echo "tag=$tag"; echo "version=${tag#v}"; echo "publish=$publish"; } >> "$GITHUB_OUTPUT"
+          { echo "tag=$tag"; echo "version=${tag#v}"; echo "publish=$publish"; echo "aur_key=$AUR_KEY"; } >> "$GITHUB_OUTPUT"
 
       - name: Wait for the tag's tests and release checks
         env:
@@ -86,6 +89,11 @@ jobs:
           echo "::error::timed out waiting for the $TAG run: $link"; exit 1
 
   aur:
+    # Says in the run list what this run does with the AUR.
+    name: >-
+      ${{ needs.gate.outputs.publish != 'true' && 'Build and check (dry run)'
+          || needs.gate.outputs.aur_key == 'true' && 'Build, check and publish to the AUR'
+          || 'Build and check (AUR push off: no key)' }}
     needs: gate
     runs-on: ubuntu-latest
     container: archlinux:base-devel
@@ -120,7 +128,7 @@ jobs:
           sudo -u builder makepkg -f --noconfirm
           namcap PKGBUILD md-preview-*.pkg.tar.*
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: aur-md-preview-${{ env.V }}
           include-hidden-files: true
