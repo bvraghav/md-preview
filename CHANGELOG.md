@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-27
+
 Release pipeline: one command prepares a release, and publishing it updates
 the AUR package.
 
@@ -231,7 +233,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/bvraghav/md-preview/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bvraghav/md-preview/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bvraghav/md-preview/compare/v0.0.3...v0.1.0
 [0.0.3]: https://github.com/bvraghav/md-preview/compare/v0.0.2...v0.0.3

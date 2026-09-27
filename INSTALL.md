@@ -124,7 +124,7 @@ md-preview doctor
 ```
 
 ```
-md-preview 0.2.0
+md-preview 0.2.1
 
 pandoc         pandoc 3.10.2
 entr           /usr/bin/entr
