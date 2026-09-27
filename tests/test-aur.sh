@@ -19,7 +19,7 @@ check ".SRCINFO matches the PKGBUILD" \
 
 echo "== update.sh (what the aur workflow runs)"
 V=$(cat "$ROOT/VERSION")
-if curl -fsI -o /dev/null "https://github.com/bvraghav/md-preview/archive/refs/tags/v$V.tar.gz"; then
+if curl -fsIL -o /dev/null "https://github.com/bvraghav/md-preview/archive/refs/tags/v$V.tar.gz"; then
   mkdir -p "$W/update"; cp "$ROOT/packaging/aur/PKGBUILD" "$ROOT/packaging/aur/.SRCINFO" "$W/update/"
   sed -i 's/^pkgrel=.*/pkgrel=7/' "$W/update/PKGBUILD"
   check "update.sh $V"                  bash -c "'$ROOT/packaging/aur/update.sh' '$V' '$W/update' >'$W/update.log' 2>&1"

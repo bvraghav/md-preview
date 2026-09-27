@@ -42,7 +42,7 @@ if [[ -f $B/a/packaging/aur/.SRCINFO ]]; then
   sed -i "s/^sha256sums=('[^']*'/sha256sums=('$h'/" "$B/a/packaging/aur/PKGBUILD"
   sed -i "0,/^\tsha256sums = .*/s//\tsha256sums = $h/" "$B/a/packaging/aur/.SRCINFO"
 fi
-cp -r "$B/a" "$B/b"
+rm -rf "$B/b"; cp -r "$B/a" "$B/b"
 check "bump to $N"                           bash -c "cd '$B/a' && MAKEPKG= make -s bump V=$N DATE=2000-01-01 >/dev/null 2>&1"
 check "  the bumped tree passes"             bash -c "cd '$B/a' && RELEASE_NESTED=1 TAG= WORK='$B/work' bash tests/test-release.sh 2>&1 | grep -q ' 0 failed'"
 eq "  [Unreleased] is empty again"           "## [$N] - 2000-01-01" "$(sed -n '/^## \[Unreleased\]$/{n;n;p;q}' "$B/a/CHANGELOG.md")"
