@@ -52,6 +52,10 @@ published before this workflow existed.
 
 ### One-time setup
 
+Until this is done, releases still build and check the package, and commit
+its checksums back to `main`; only the push to the AUR is skipped, with a
+warning in the run.
+
 1. An account on <https://aur.archlinux.org>.
 2. A key pair just for this:
    ```sh

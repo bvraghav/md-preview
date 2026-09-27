@@ -3,7 +3,8 @@
 # hand, it's a dry run unless "publish" is ticked: it updates and builds the
 # package and uploads it as an artifact, but pushes nothing.
 #
-# Needs the secret AUR_SSH_PRIVATE_KEY (see packaging/aur/README.md).
+# Pushing to the AUR needs the secret AUR_SSH_PRIVATE_KEY (see
+# packaging/aur/README.md); without it, that step is skipped with a warning.
 
 name: aur
 
@@ -135,7 +136,13 @@ jobs:
           # The Ed25519 host key fingerprint published on aur.archlinux.org.
           AUR_HOST_KEY: SHA256:RFzBCUItH9LZS0cKB5UE6ceAYhBD5C8GeOBip8Z11+4
         run: |
-          [[ -n $AUR_SSH_PRIVATE_KEY ]] || { echo "::error::the secret AUR_SSH_PRIVATE_KEY is not set"; exit 1; }
+          # No key yet (no AUR account): the package was still built and
+          # checked above; publishing starts once the secret is added.
+          if [[ -z $AUR_SSH_PRIVATE_KEY ]]; then
+            echo "::warning::AUR_SSH_PRIVATE_KEY is not set: not pushing $V to the AUR"
+            echo "Not pushed to the AUR: the secret \`AUR_SSH_PRIVATE_KEY\` is not set." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           install -dm700 ~/.ssh
           printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur && chmod 600 ~/.ssh/aur
           ssh-keyscan -t ed25519 aur.archlinux.org > ~/.ssh/known_hosts 2>/dev/null

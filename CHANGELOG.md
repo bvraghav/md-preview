@@ -20,7 +20,8 @@ the AUR package.
   tag passed CI, the `aur` workflow updates the PKGBUILD's checksums (and
   KaTeX and mermaid versions) with `packaging/aur/update.sh`, builds and
   checks the package in an Arch Linux container, pushes it to the AUR, and
-  commits the result back to `main`. Run by hand, it's a dry run.
+  commits the result back to `main`. Run by hand, it's a dry run. Without
+  the `AUR_SSH_PRIVATE_KEY` secret, it skips only the push to the AUR.
 
 ## [0.2.0] - 2026-09-27
 
