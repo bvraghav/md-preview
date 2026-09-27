@@ -203,3 +203,9 @@ release checklist, and [TODO.md](TODO.md) for the roadmap.
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+---
+
+Designed and maintained by B.V. Raghav, in collaboration with
+[Claude Code](https://claude.com/claude-code) (Anthropic), which wrote much
+of the code and documentation.

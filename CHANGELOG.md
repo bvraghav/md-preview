@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-27
+
+Documentation only: how the project is maintained, and where publishing
+to the AUR and MELPA stands.
+
+### Changed
+
+- **CONTRIBUTING:** the conventions (release branches, TODO.md's
+  structure, keeping tests/README and MANIFEST current, linting the
+  workflows, the `Assisted-by:` header), a table of what CI runs on which
+  event, and the release checklist as it's actually done: a
+  `release-X.Y.Z` branch, a pull request, then the tag on the merge commit.
+- **AUR and MELPA status:** the AUR and MELPA notes, INSTALL and TODO
+  say where each stands and link the issues that track the remaining
+  steps: [#5](https://github.com/bvraghav/md-preview/issues/5) for the AUR
+  (registration is closed) and
+  [#4](https://github.com/bvraghav/md-preview/issues/4) for MELPA (a new
+  recipe PR from 2026-10-27; the first was too early). The MELPA notes
+  also correct how to try the sandbox build.
+
+### Added
+
+- `CLAUDE.md`: notes for AI assistants working on the repository.
+- README credits Claude Code, which wrote much of the code and
+  documentation.
+
 ## [0.2.2] - 2026-09-27
 
 ### Added
@@ -262,7 +288,8 @@ For packagers and maintainers:
 - `Makefile` with `install`, `link`, `uninstall`, `check`, `clean`.
 - `test-sample.md` covering every supported feature.
 
-[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/bvraghav/md-preview/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/bvraghav/md-preview/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/bvraghav/md-preview/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bvraghav/md-preview/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bvraghav/md-preview/compare/v0.1.0...v0.2.0

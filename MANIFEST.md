@@ -11,9 +11,10 @@ Every file in the repository and what it does.
 | `REFERENCE.md`  | Complete reference: CLI, environment, dialect, math, diagrams, template, filter, Emacs API |
 | `MANIFEST.md`   | This file |
 | `CHANGELOG.md`  | Release history (Keep a Changelog format) |
-| `VERSION`       | Current version, read by the script at runtime (`0.2.2`) |
+| `VERSION`       | Current version, read by the script at runtime (`0.2.3`) |
 | `LICENSE`       | MIT license |
 | `CONTRIBUTING.md` | Working on md-preview, and the release checklist |
+| `CLAUDE.md`     | Notes for AI assistants (read by Claude Code): how the maintainer works, the environment, where AUR and MELPA stand |
 | `TODO.md`       | Roadmap: the intent and the agreed plan for upcoming releases |
 | `Makefile`      | `install`, `link`, `uninstall`, `bump`, `test`, `check`, `clean` |
 | `tools/bump.sh` | `make bump V=X.Y.Z`: every copy of the version, the CHANGELOG section and links, the AUR PKGBUILD |

@@ -43,6 +43,11 @@ Work in this order. Item numbers match the Intent list
 (13 and 14 were added later). Items 1, 2, 4, 5, 7–14 and part of
 6 are done; see `# DONE` below.
 
+Outside this plan, two publishing steps wait on others
+and are tracked as issues: the AUR
+([#5](https://github.com/bvraghav/md-preview/issues/5), registration closed) and MELPA
+([#4](https://github.com/bvraghav/md-preview/issues/4), from 2026-10-27).
+
 | # | Item | Release | Why here |
 |---|------|---------|----------|
 | 6 | Remaining build-time extras | 0.2.x | "Previous/next" needs folder mode |
@@ -183,11 +188,19 @@ PKGBUILD update in `packaging/aur/update.sh` so it can be
 run and tested outside CI (the `aur` suite runs it
 against the released tag). Before building, the workflow
 waits for the tag's own CI run to pass; pre-releases are
-built but not published. The one-time setup (AUR
-account, SSH key, the `AUR_SSH_PRIVATE_KEY` secret) and
-the MELPA recipe PR are still the maintainer's to do
-(AUR registration is closed for now; until the secret is
-set, the workflow skips the push with a warning).
+built but not published. Two steps are still the maintainer's, each tracked in
+an issue:
+
+- **AUR:** the one-time setup (account, SSH key, the
+  `AUR_SSH_PRIVATE_KEY` secret). New AUR registration
+  is closed for now; until the secret is set, the
+  workflow skips the push with a warning.
+  [#5](https://github.com/bvraghav/md-preview/issues/5)
+- **MELPA:** the recipe PR. The first, melpa/melpa#10251,
+  was closed as too early (the repository must be public
+  for a month), so a new one goes in from 2026-10-27.
+  [#4](https://github.com/bvraghav/md-preview/issues/4)
+
 Tested locally: `bump`, `update.sh`, `makepkg`, and the
 workflow's API queries; the container steps get their
 first run as a dry run on GitHub (no Docker here).
