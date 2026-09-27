@@ -186,6 +186,9 @@ waits for the tag's own CI run to pass; pre-releases are
 built but not published. The one-time setup (AUR
 account, SSH key, the `AUR_SSH_PRIVATE_KEY` secret) and
 the MELPA recipe PR are still the maintainer's to do
+(the first MELPA PR, #10251, was closed as too early: the
+repository must be public for a month, so resubmit from
+2026-10-27)
 (AUR registration is closed for now; until the secret is
 set, the workflow skips the push with a warning).
 Tested locally: `bump`, `update.sh`, `makepkg`, and the

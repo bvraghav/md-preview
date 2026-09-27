@@ -13,9 +13,22 @@ checks: byte-compilation with warnings as errors, `checkdoc`,
 
 ## Status
 
-Submitted: the recipe PR to `melpa/melpa` was opened on 2026-09-27 and is
-waiting for review. Review comments are answered with changes on `main`,
-which MELPA builds from.
+Not yet on MELPA. The first recipe PR,
+[melpa/melpa#10251](https://github.com/melpa/melpa/pull/10251), was closed
+on 2026-09-27: MELPA only takes packages whose repository has been public
+for at least a month, and this one was created on 2026-09-26. Their note
+asks for a **new** pull request (not a reopened one) once that's true, so
+from **2026-10-27**.
+
+For that PR, be ready to say how md-preview differs from the existing
+Markdown previewers (markdown-mode's `markdown-live-preview-mode`,
+`markdown-preview-mode`, `grip-mode`, `impatient-mode`), since MELPA
+declines packages that duplicate existing ones: YAML frontmatter, KaTeX
+and mermaid rendered offline, and whole-folder previews with a file tree
+and working links, served live or built as a static site.
+
+Review comments are answered with changes on `main`, which MELPA builds
+from.
 
 ## Submitting (once)
 
